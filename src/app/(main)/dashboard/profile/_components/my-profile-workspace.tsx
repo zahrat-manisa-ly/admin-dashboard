@@ -195,7 +195,9 @@ export function MyProfileWorkspace() {
                   profile={profile}
                   pending={updateProfile.isPending}
                   deletePending={deleteAccount.isPending}
-                  onSave={(input) => updateProfile.mutateAsync(input)}
+                  onSave={async (input) => {
+                    await updateProfile.mutateAsync(input);
+                  }}
                   onDeleteAccount={(password) => deleteAccount.mutateAsync({ password })}
                 />
               ) : null}
