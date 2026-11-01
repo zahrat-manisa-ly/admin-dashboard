@@ -9,7 +9,11 @@ import type {
   LoginRequest,
   LoginResult,
   MyProfile,
+  RegisteredUser,
   RegisterRequest,
+  ResetPasswordRequest,
+  TrustedBrowser,
+  TrustedBrowserRevocationResponse,
   UpdateMyProfileRequest,
   UpdateMyProfileResponse,
 } from "@/lib/api/types/auth";
@@ -29,7 +33,19 @@ export const authApi = {
     return (await apiClient.post<RegisteredUser>(endpoints.authV1.confirmRegister, input)).data;
   },
   async forgotPassword(input: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
-    return (await apiClient.post<ForgotPasswordResponse>(endpoints.authV1.forgotPassword, input)).data;
+    const body: ForgotPasswordRequest = {
+      email: input.email?.trim() || null,
+      phone_number: input.phone_number?.trim() || null,
+    };
+    return (await apiClient.post<ForgotPasswordResponse>(endpoints.authV1.forgotPassword, body)).data;
+  },
+  async resetPassword(input: ResetPasswordRequest): Promise<void> {
+    await apiClient.post(endpoints.authV1.resetPassword, {
+      token: input.token,
+      new_password: input.new_password,
+      confirm_password: input.confirm_password,
+      logout_other_sessions: input.logout_other_sessions ?? true,
+    });
   },
   async getMyProfile(signal?: AbortSignal): Promise<MyProfile> {
     return (await apiClient.get<MyProfile>(endpoints.authV1.me, { signal })).data;
@@ -40,6 +56,17 @@ export const authApi = {
   async changePassword(input: ChangePasswordRequest): Promise<void> {
     await apiClient.post(endpoints.authV1.changePassword, input);
   },
+  //--------trusted-browsers----//
+  async listTrustedBrowsers(signal?: AbortSignal): Promise<TrustedBrowser[]> {
+    return (await apiClient.get<TrustedBrowser[]>(endpoints.authV1.trustedBrowsers, { signal })).data;
+  },
+  async removeTrustedBrowser(id: string): Promise<TrustedBrowserRevocationResponse> {
+    return (await apiClient.delete<TrustedBrowserRevocationResponse>(endpoints.authV1.trustedBrowser(id))).data;
+  },
+  async removeAllTrustedBrowsers(): Promise<TrustedBrowserRevocationResponse> {
+    return (await apiClient.delete<TrustedBrowserRevocationResponse>(endpoints.authV1.trustedBrowsers)).data;
+  },
+  //-------end-trusted-browsers----//
   async deleteMyAccount(input: DeleteAccountRequest): Promise<void> {
     try {
       await apiClient.delete(endpoints.authV1.me, { data: input });

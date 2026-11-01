@@ -37,26 +37,31 @@ export function usePermissions() {
   const query = useCurrentUserQuery();
   // Never render stale access controls after a failed permissions refresh.
   const currentUser = query.isError ? null : query.data;
+
   const can = (permission: Permission) => hasPermission(currentUser?.permissions ?? [], permission);
+
   return { ...query, currentUser, can, ownerId: currentUser?.id ?? "anonymous" };
 }
 
-export const usersQueryOptions = (ownerId: string, params: UsersParams) => queryOptions({
-  queryKey: accessKeys.list(ownerId, params),
-  queryFn: ({ signal }) => accessApi.users(params, signal),
-});
+export const usersQueryOptions = (ownerId: string, params: UsersParams) =>
+  queryOptions({
+    queryKey: accessKeys.list(ownerId, params),
+    queryFn: ({ signal }) => accessApi.users(params, signal),
+  });
 
-export const userQueryOptions = (ownerId: string, id: string) => queryOptions({
-  queryKey: accessKeys.user(ownerId, id),
-  queryFn: ({ signal }) => accessApi.user(id, signal),
-});
+export const userQueryOptions = (ownerId: string, id: string) =>
+  queryOptions({
+    queryKey: accessKeys.user(ownerId, id),
+    queryFn: ({ signal }) => accessApi.user(id, signal),
+  });
 
-export const rolesQueryOptions = (ownerId: string) => queryOptions({
-  queryKey: accessKeys.roles(ownerId),
-  queryFn: ({ signal }) => accessApi.roles(signal),
-});
+export const rolesQueryOptions = (ownerId: string) =>
+  queryOptions({
+    queryKey: accessKeys.roles(ownerId),
+    queryFn: ({ signal }) => accessApi.roles(signal),
+  });
 
 export function useRolesQuery() {
   const { ownerId, can } = usePermissions();
-  return useQuery({ ...rolesQueryOptions(ownerId), enabled: can("roles.view") || can("users.view") });
+  return useQuery({ ...rolesQueryOptions(ownerId), enabled: can("roles:read") || can("users:read") });
 }

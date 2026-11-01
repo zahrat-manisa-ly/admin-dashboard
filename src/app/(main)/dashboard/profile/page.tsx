@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { MyProfileWorkspace } from "./_components/my-profile-workspace";
 
-export const metadata: Metadata = {
-  title: "My profile",
-  description: "Your account profile and security settings.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("profile");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
 
 export default function ProfilePage() {
   return <MyProfileWorkspace />;

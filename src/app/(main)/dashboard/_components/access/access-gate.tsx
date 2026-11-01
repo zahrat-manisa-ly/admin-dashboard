@@ -1,17 +1,19 @@
 "use client";
 
-import { useIsMutating, useQueryClient } from "@tanstack/react-query";
+import { type ReactNode, useEffect } from "react";
+
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { type ReactNode, useEffect } from "react";
+
+import { useIsMutating, useQueryClient } from "@tanstack/react-query";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n/language-provider";
 import { getRoutePermission } from "@/lib/auth/permissions";
 
-import { AccessError } from "./access-feedback";
 import { usePermissions } from "./access.queries";
+import { AccessError } from "./access-feedback";
 import { AccessSkeleton } from "./access-skeleton";
 
 export function AccessGate({ children }: { children: ReactNode }) {
@@ -30,17 +32,20 @@ export function AccessGate({ children }: { children: ReactNode }) {
     router.replace("/login");
   }, [client, currentUser, isError, isPending, router, switching]);
 
-  if (isPending || switching) return <AccessSkeleton kind={pathname.includes("roles-permissions") ? "roles" : "users"} />;
+  if (isPending || switching)
+    return <AccessSkeleton kind={pathname.includes("roles-permissions") ? "roles" : "users"} />;
   if (isError) return <AccessError error={error} retry={() => void refetch()} busy={isFetching} />;
   if (!currentUser) return <AccessSkeleton />;
   if (permission && !can(permission)) {
-    const destination = currentUser.permissions.includes("dashboard.view") ? "/dashboard/default" : "/login";
+    const destination = "/dashboard/default";
     return (
       <Alert>
         <AlertTitle>{ar ? "الوصول غير متاح" : "Access unavailable"}</AlertTitle>
         <AlertDescription className="flex flex-col items-start gap-3">
           <p>{ar ? "حسابك لا يملك صلاحية عرض هذه الصفحة." : "Your account cannot view this page."}</p>
-          <Button asChild variant="outline"><Link href={destination}>{ar ? "العودة" : "Go back"}</Link></Button>
+          <Button asChild variant="outline">
+            <Link href={destination}>{ar ? "العودة" : "Go back"}</Link>
+          </Button>
         </AlertDescription>
       </Alert>
     );

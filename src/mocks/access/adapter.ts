@@ -1,4 +1,4 @@
-import { AxiosHeaders, CanceledError, type AxiosAdapter, type InternalAxiosRequestConfig } from "axios";
+import { type AxiosAdapter, AxiosHeaders, CanceledError, type InternalAxiosRequestConfig } from "axios";
 import { z } from "zod";
 
 import { initialRoles, initialUsers } from "@/app/(main)/dashboard/_components/access-data";
@@ -13,7 +13,7 @@ import {
   usersParamsSchema,
   userUpdateSchema,
 } from "@/lib/api/types/access";
-import { allPermissions, type Permission } from "@/lib/auth/permissions";
+import type { PermissionName } from "@/lib/auth/permissions";
 
 // This module is imported lazily by Axios in the browser. Reloading resets the demo database.
 let users: TeamUser[] = structuredClone(initialUsers);
@@ -22,15 +22,9 @@ let roles: TeamRole[] = initialRoles.map(
     ...role,
     memberCount: 0,
     permissions:
-      role.id === "admin"
-        ? [...allPermissions]
-        : role.id === "manager"
-          ? allPermissions.filter((permission) => !permission.endsWith(".delete"))
-          : role.id === "finance"
-            ? ["dashboard.view", "payments.view", "payments.edit", "reports.view"]
-            : role.permissions.filter((permission): permission is Permission =>
-                allPermissions.includes(permission as Permission),
-              ),
+      role.id === "manager"
+        ? role.permissions.filter((permission) => !permission.endsWith(".delete"))
+        : role.permissions,
   }),
 );
 let currentUserId: string | null = "u1";
@@ -53,7 +47,7 @@ function currentUser(): CurrentUser {
   return { ...user, roleName: role.name, permissions: [...role.permissions] };
 }
 
-function requirePermission(...permissions: Permission[]) {
+function requirePermission(...permissions: PermissionName[]) {
   const user = currentUser();
   if (!permissions.some((permission) => user.permissions.includes(permission))) {
     throw new ApiError("You do not have permission to perform this action.", 403);
@@ -112,7 +106,7 @@ function handleRequest(config: InternalAxiosRequestConfig): unknown {
   }
 
   if (path === endpoints.users.stats && method === "GET") {
-    requirePermission("users.view");
+    requirePermission("users:read");
     return {
       total: users.length,
       active: users.filter((user) => user.status === "active").length,
@@ -120,7 +114,7 @@ function handleRequest(config: InternalAxiosRequestConfig): unknown {
     };
   }
   if (path === endpoints.users.list && method === "GET") {
-    requirePermission("users.view");
+    requirePermission("users:read");
     const params = parse(usersParamsSchema, config.params ?? {});
     const search = params.search.trim().toLowerCase();
     const filtered = users.filter(
@@ -142,7 +136,7 @@ function handleRequest(config: InternalAxiosRequestConfig): unknown {
     };
   }
   if (path === endpoints.users.list && method === "POST") {
-    requirePermission("users.create");
+    requirePermission("users:create");
     const input = parse(userInputSchema, body);
     validateUser(input.email, input.roleId);
     const user: TeamUser = { ...input, id: crypto.randomUUID(), status: "invited", lastActive: "" };
@@ -155,18 +149,20 @@ function handleRequest(config: InternalAxiosRequestConfig): unknown {
   if (userId && !userId.includes("/")) {
     const user = users.find((entry) => entry.id === userId);
     if (method === "GET") {
-      requirePermission("users.view");
+      requirePermission("users:read");
       if (!user) throw new ApiError("User not found.", 404);
       return user;
     }
     if (method === "PATCH") {
-      requirePermission("users.edit");
+      requirePermission("employee:update");
       if (!user) throw new ApiError("User not found.", 404);
       const input = parse(userUpdateSchema, body);
       const updated = { ...user, ...input };
       const protectedRole = roles.find((role) => role.id === user.roleId)?.locked;
-      if ((protectedRole || user.id === currentUserId) &&
-        (updated.roleId !== user.roleId || updated.status !== user.status)) {
+      if (
+        (protectedRole || user.id === currentUserId) &&
+        (updated.roleId !== user.roleId || updated.status !== user.status)
+      ) {
         throw new ApiError("The current account and system administrator access cannot be changed here.", 409);
       }
       validateUser(updated.email, updated.roleId, user.id);
@@ -174,7 +170,7 @@ function handleRequest(config: InternalAxiosRequestConfig): unknown {
       return updated;
     }
     if (method === "DELETE") {
-      requirePermission("users.delete");
+      requirePermission("users:delete");
       if (!user) throw new ApiError("User not found.", 404);
       if (user.id === currentUserId || roles.find((role) => role.id === user.roleId)?.locked) {
         throw new ApiError("This account cannot be deleted.", 409);
@@ -184,14 +180,14 @@ function handleRequest(config: InternalAxiosRequestConfig): unknown {
     }
   }
   if (path === endpoints.roles.list && method === "GET") {
-    requirePermission("roles.view", "users.view");
+    requirePermission("roles:read", "users:read");
     return roles.map((role) => ({
       ...role,
       memberCount: users.filter((user) => user.roleId === role.id).length,
     }));
   }
   if (path === endpoints.roles.list && method === "POST") {
-    requirePermission("roles.create");
+    requirePermission("roles:create");
     const input = parse(roleInputSchema, body);
     const role: TeamRole = { ...input, id: crypto.randomUUID(), memberCount: 0 };
     roles = [...roles, role];
@@ -201,7 +197,7 @@ function handleRequest(config: InternalAxiosRequestConfig): unknown {
     ? decodeURIComponent(path.slice(endpoints.roles.list.length + 1))
     : undefined;
   if (roleId && !roleId.includes("/") && (method === "PATCH" || method === "DELETE")) {
-    requirePermission(method === "PATCH" ? "roles.edit" : "roles.delete");
+    requirePermission(method === "PATCH" ? "roles:manage_permissions" : "roles:delete");
     const role = roles.find((entry) => entry.id === roleId);
     if (!role) throw new ApiError("Role not found.", 404);
     if (role.locked) throw new ApiError("The administrator role is locked.", 409);

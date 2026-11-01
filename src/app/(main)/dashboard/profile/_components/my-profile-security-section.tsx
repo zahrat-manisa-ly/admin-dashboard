@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { useI18n } from "@/i18n/language-provider";
 import type { ChangePasswordRequest } from "@/lib/api/types/auth";
 import { notify } from "@/lib/notify";
 import { cn } from "@/lib/utils";
@@ -30,16 +31,17 @@ export function MyProfileSecuritySection({
   pending: boolean;
   onChangePassword: (input: ChangePasswordRequest) => Promise<void>;
 }) {
+  const { t } = useI18n();
   const [values, setValues] = useState({ current: "", next: "", confirm: "" });
 
   const handleSubmit = async () => {
     if (pending) return;
     if (values.next.length < 8) {
-      notify.error("New password must be at least 8 characters.");
+      notify.error(t("profile.passwordMinLength"));
       return;
     }
     if (values.next !== values.confirm) {
-      notify.error("New password and confirmation do not match.");
+      notify.error(t("profile.passwordsDoNotMatch"));
       return;
     }
     await onChangePassword({
@@ -52,13 +54,10 @@ export function MyProfileSecuritySection({
 
   return (
     <div className="flex flex-col gap-6">
-      <SettingsSection
-        title="Change password"
-        description="Sets a new password for your account. Requires at least 8 characters."
-      >
+      <SettingsSection title={t("profile.changePassword")} description={t("profile.changePasswordDescription")}>
         <div className="flex max-w-sm flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="my-profile-current-password">Current password</Label>
+            <Label htmlFor="my-profile-current-password">{t("profile.currentPassword")}</Label>
             <Input
               id="my-profile-current-password"
               type="password"
@@ -69,7 +68,7 @@ export function MyProfileSecuritySection({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="my-profile-new-password">New password</Label>
+            <Label htmlFor="my-profile-new-password">{t("profile.newPassword")}</Label>
             <Input
               id="my-profile-new-password"
               type="password"
@@ -80,7 +79,7 @@ export function MyProfileSecuritySection({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="my-profile-confirm-password">Confirm new password</Label>
+            <Label htmlFor="my-profile-confirm-password">{t("profile.confirmNewPassword")}</Label>
             <Input
               id="my-profile-confirm-password"
               type="password"
@@ -97,7 +96,7 @@ export function MyProfileSecuritySection({
               onClick={() => void handleSubmit()}
             >
               {pending && <Spinner data-icon="inline-start" />}
-              Change password
+              {t("profile.changePassword")}
             </Button>
           </div>
         </div>
@@ -109,19 +108,17 @@ export function MyProfileSecuritySection({
 }
 
 function TwoFactorPlaceholder() {
+  const { t } = useI18n();
   const [enabled, setEnabled] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
   const [disableOpen, setDisableOpen] = useState(false);
 
   return (
-    <SettingsSection
-      title="Two-factor authentication"
-      description="Adds a one-time code from your authenticator app on top of your password."
-    >
+    <SettingsSection title={t("profile.twoFactor")} description={t("profile.twoFactorDescription")}>
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
-          <ShieldCheckIcon className="text-muted-foreground size-4 shrink-0" />
-          <span className="text-sm">Authenticator app</span>
+          <ShieldCheckIcon className="size-4 shrink-0 text-muted-foreground" />
+          <span className="text-sm">{t("profile.authenticatorApp")}</span>
         </div>
         <Badge
           className={cn(
@@ -131,23 +128,23 @@ function TwoFactorPlaceholder() {
               : "bg-muted text-muted-foreground",
           )}
         >
-          {enabled ? "Enabled" : "Not enabled"}
+          {enabled ? t("profile.enabled") : t("profile.notEnabled")}
         </Badge>
         {enabled ? (
           <Dialog open={disableOpen} onOpenChange={setDisableOpen}>
             <DialogTrigger asChild>
               <Button type="button" variant="outline" size="sm">
-                Turn off
+                {t("profile.turnOff")}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-100">
               <DialogHeader>
-                <DialogTitle>Turn off two-factor authentication?</DialogTitle>
-                <DialogDescription>Your account will be protected by your password alone.</DialogDescription>
+                <DialogTitle>{t("profile.turnOffTitle")}</DialogTitle>
+                <DialogDescription>{t("profile.turnOffDescription")}</DialogDescription>
               </DialogHeader>
               <div className="flex flex-col-reverse gap-4 sm:flex-row sm:justify-end">
                 <DialogClose asChild>
-                  <Button variant="outline">Cancel</Button>
+                  <Button variant="outline">{t("profile.cancel")}</Button>
                 </DialogClose>
                 <Button
                   type="button"
@@ -155,10 +152,10 @@ function TwoFactorPlaceholder() {
                   onClick={() => {
                     setEnabled(false);
                     setDisableOpen(false);
-                    notify.success("Two-factor authentication turned off");
+                    notify.success(t("profile.twoFactorOff"));
                   }}
                 >
-                  Turn off
+                  {t("profile.turnOff")}
                 </Button>
               </div>
             </DialogContent>
@@ -167,17 +164,17 @@ function TwoFactorPlaceholder() {
           <Dialog open={setupOpen} onOpenChange={setSetupOpen}>
             <DialogTrigger asChild>
               <Button type="button" size="sm">
-                Set up
+                {t("profile.setUp")}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-100">
               <DialogHeader>
-                <DialogTitle>Set up two-factor authentication</DialogTitle>
-                <DialogDescription>Use the MFA API when backend enrollment is ready.</DialogDescription>
+                <DialogTitle>{t("profile.setUpTitle")}</DialogTitle>
+                <DialogDescription>{t("profile.setUpDescription")}</DialogDescription>
               </DialogHeader>
               <div className="flex flex-col items-center gap-3 py-2">
-                <div className="bg-muted flex size-32 items-center justify-center rounded-lg border">
-                  <SmartphoneIcon className="text-muted-foreground size-16" />
+                <div className="flex size-32 items-center justify-center rounded-lg border bg-muted">
+                  <SmartphoneIcon className="size-16 text-muted-foreground" />
                 </div>
               </div>
               <Button
@@ -185,10 +182,10 @@ function TwoFactorPlaceholder() {
                 onClick={() => {
                   setEnabled(true);
                   setSetupOpen(false);
-                  notify.info("MFA UI placeholder — connect /api/v1/mfa when required.");
+                  notify.info(t("profile.mfaPlaceholder"));
                 }}
               >
-                I&apos;ve scanned it
+                {t("profile.scanned")}
               </Button>
             </DialogContent>
           </Dialog>

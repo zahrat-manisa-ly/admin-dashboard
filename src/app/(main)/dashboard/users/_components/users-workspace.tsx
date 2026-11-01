@@ -40,6 +40,7 @@ import type { User } from "@/lib/api/types/users";
 import { notify } from "@/lib/notify";
 
 import { filterUsers, filterUsersByRoleId, isTeamDirectoryUser, userDirectoryStats } from "./filter-users";
+import { InvitationsTable } from "./invitations-table";
 import { useUsersFilters } from "./use-users-filters";
 import { UserEditor } from "./user-editor";
 import { UsersDirectoryToolbar } from "./users-directory-toolbar";
@@ -60,21 +61,27 @@ export function UsersWorkspace() {
     queryKey: ["users-v1", params.page, params.pageSize],
     queryFn: ({ signal }) => usersApi.list(params.page, params.pageSize, signal),
     placeholderData: keepPreviousData,
-    enabled: can("users.view"),
+    enabled: can("users:read"),
   });
 
   const total = usersQuery.data?.total ?? 0;
   const snapshotQuery = useQuery({
     queryKey: ["users-v1", "snapshot", total],
     queryFn: ({ signal }) => usersApi.list(1, Math.min(total, SNAPSHOT_CAP), signal),
-    enabled: can("users.view") && total > 0,
+    enabled: can("users:read") && total > 0,
     staleTime: 60_000,
   });
 
   const rolesQuery = useQuery({
     queryKey: ["users-v1", "roles"],
     queryFn: ({ signal }) => usersApi.roles(signal),
-    enabled: can("users.create"),
+    enabled: can("users:create") || can("roles:read"),
+  });
+
+  const invitationsCount = useQuery({
+    queryKey: ["users-v1", "invitations", "count"],
+    queryFn: ({ signal }) => usersApi.invitations({ page: 1, size: 1 }, signal),
+    enabled: can("users:read"),
   });
 
   const invalidate = () => client.invalidateQueries({ queryKey: ["users-v1"] });
@@ -108,7 +115,15 @@ export function UsersWorkspace() {
     [snapshotQuery.data?.items, usersQuery.data?.items],
   );
 
-  const stats = useMemo(() => userDirectoryStats(teamSnapshot, teamSnapshot.length), [teamSnapshot]);
+  const stats = useMemo(
+    () => ({
+      ...userDirectoryStats(teamSnapshot, teamSnapshot.length),
+      pending: invitationsCount.data?.total ?? 0,
+    }),
+    [invitationsCount.data?.total, teamSnapshot],
+  );
+
+  const showingInvites = params.status === "invited";
 
   if (usersQuery.isPending) return <AccessSkeleton />;
   if (!usersQuery.data)
@@ -129,8 +144,8 @@ export function UsersWorkspace() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{ar ? "المستخدمون" : "Users"}</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="font-semibold text-2xl tracking-tight">{ar ? "المستخدمون" : "Users"}</h1>
+        <p className="text-muted-foreground text-sm">
           {ar ? "عرض المستخدمين ودعوتهم وتعديل بياناتهم وإدارتهم." : "View, invite, edit, and manage dashboard users."}
         </p>
       </div>
@@ -142,6 +157,8 @@ export function UsersWorkspace() {
         suspended={stats.suspended}
         formatNumber={formatNumber}
         ar={ar}
+        pendingActive={showingInvites}
+        onPending={() => update({ status: showingInvites ? "all" : "invited", page: 1 })}
       />
 
       {rolesQuery.isError && (
@@ -162,13 +179,26 @@ export function UsersWorkspace() {
           roleId={params.roleId}
           onRoleChange={(value) => update({ roleId: value, page: 1 })}
           roles={rolesQuery.data ?? []}
-          canInvite={can("users.create")}
+          canInvite={can("users:create")}
           inviteDisabled={!rolesQuery.data?.length}
           onInvite={() => setEditor("new")}
         />
 
         <CardContent className="px-0" aria-busy={usersQuery.isFetching}>
-          {filteredItems.length ? (
+          {showingInvites ? (
+            <InvitationsTable
+              ar={ar}
+              page={params.page}
+              pageSize={params.pageSize}
+              search={params.search}
+              roleId={params.roleId}
+              roles={rolesQuery.data ?? []}
+              formatNumber={formatNumber}
+              canManage={can("users:create")}
+              onPageChange={(page) => update({ page })}
+              onPageSizeChange={(pageSize) => update({ pageSize, page: 1 })}
+            />
+          ) : filteredItems.length ? (
             <div className="overflow-x-auto">
               <Table className="**:data-[slot=table-cell]:px-4 **:data-[slot=table-head]:px-4">
                 <TableHeader className="bg-neutral-100 dark:bg-muted/60 [&_tr]:border-b">
@@ -242,8 +272,9 @@ export function UsersWorkspace() {
                               user={user}
                               ar={ar}
                               name={name}
-                              canEdit={can("users.edit")}
-                              canDelete={can("users.delete")}
+                              canEdit={can("employee:update")}
+                              canBlock={can("users:manage_blocking")}
+                              canDelete={can("users:delete")}
                               protectedUser={protectedUser}
                               blockPending={blocking.isPending && blocking.variables?.id === user.id}
                               onEdit={() => setEditor(user.id)}
@@ -277,7 +308,7 @@ export function UsersWorkspace() {
                   <TableRow className="border-0 hover:bg-transparent">
                     <TableCell colSpan={7} className="p-0">
                       <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           {ar
                             ? `عرض ${formatNumber(rowStart)} إلى ${formatNumber(rowEnd)} من ${formatNumber(total)}`
                             : `Showing ${formatNumber(rowStart)} to ${formatNumber(rowEnd)} of ${formatNumber(total)} entries`}
@@ -285,7 +316,7 @@ export function UsersWorkspace() {
 
                         <div className="flex flex-wrap items-center gap-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-muted-foreground text-sm">
                               {ar ? "صفوف لكل صفحة" : "Rows per page"}
                             </span>
                             <Select
@@ -400,6 +431,7 @@ type UserRowActionsProps = {
   ar: boolean;
   name: string;
   canEdit: boolean;
+  canBlock: boolean;
   canDelete: boolean;
   protectedUser: boolean;
   blockPending: boolean;
@@ -413,6 +445,7 @@ function UserRowActions({
   ar,
   name,
   canEdit,
+  canBlock,
   canDelete,
   protectedUser,
   blockPending,
@@ -420,7 +453,7 @@ function UserRowActions({
   onDelete,
   onToggleBlock,
 }: UserRowActionsProps) {
-  if (!canEdit && !canDelete) return null;
+  if (!canEdit && !canBlock && !canDelete) return null;
 
   const suspendLabel = user.is_blocked ? (ar ? "إلغاء الإيقاف" : "Unsuspend") : ar ? "إيقاف" : "Suspend";
 
@@ -444,7 +477,7 @@ function UserRowActions({
               {ar ? "تعديل" : "Edit"}
             </DropdownMenuItem>
           )}
-          {canEdit && (
+          {canBlock && (
             <DropdownMenuItem disabled={protectedUser || blockPending} onClick={onToggleBlock}>
               {blockPending ? <Spinner data-icon="inline-start" /> : <UserX data-icon="inline-start" />}
               {suspendLabel}

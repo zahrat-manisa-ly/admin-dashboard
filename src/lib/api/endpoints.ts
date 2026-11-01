@@ -5,8 +5,11 @@ export const endpoints = {
     register: "/api/v1/auth/register",
     confirmRegister: "/api/v1/auth/register/confirm",
     forgotPassword: "/api/v1/auth/forgot-password",
+    resetPassword: "/api/v1/auth/reset-password",
     me: "/api/v1/auth/me",
     changePassword: "/api/v1/auth/change-password",
+    trustedBrowsers: "/api/v1/auth/trusted-browsers",
+    trustedBrowser: (id: string) => `/api/v1/auth/trusted-browsers/${encodeURIComponent(id)}`,
     logout: "/api/v1/auth/logout",
   },
   auth: {
@@ -24,6 +27,11 @@ export const endpoints = {
   usersV1: {
     list: "/api/v1/users",
     me: "/api/v1/users/me",
+    customers: "/api/v1/users/c",
+    customer: (id: string) => `/api/v1/users/c/${encodeURIComponent(id)}`,
+    invitations: "/api/v1/users/invitations",
+    invitationResend: (id: string) => `/api/v1/users/invitations/${encodeURIComponent(id)}/resend`,
+    invitationRevoke: (id: string) => `/api/v1/users/invitations/${encodeURIComponent(id)}/revoke`,
     detail: (id: string) => `/api/v1/users/${encodeURIComponent(id)}`,
     employee: (id: string) => `/api/v1/users/${encodeURIComponent(id)}/employee`,
     blocking: (id: string) => `/api/v1/users/${encodeURIComponent(id)}/blocking`,

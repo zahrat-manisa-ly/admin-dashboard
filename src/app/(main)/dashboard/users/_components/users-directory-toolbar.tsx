@@ -47,11 +47,11 @@ export function UsersDirectoryToolbar({
   return (
     <div className="flex flex-col gap-4 border-b px-4 py-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="text-sm font-medium">{ar ? "تصفية" : "Filter"}</span>
+        <span className="font-medium text-sm">{ar ? "تصفية" : "Filter"}</span>
         {canInvite && (
           <Button size="sm" onClick={onInvite} disabled={inviteDisabled}>
             <UserPlus data-icon="inline-start" />
-            {ar ? "دعوة عضو" : "Invite member"}
+            {ar ? "دعوة مستخدم" : "Invite user"}
           </Button>
         )}
       </div>

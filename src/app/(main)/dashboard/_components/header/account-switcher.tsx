@@ -20,11 +20,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
+import { useI18n } from "@/i18n/language-provider";
 import { isMockApi } from "@/lib/api/client";
 import { accessApi } from "@/lib/api/services/access";
 import { getInitials } from "@/lib/utils";
 
 export function AccountSwitcher() {
+  const { t } = useI18n();
   const router = useRouter();
   const currentUserQuery = useCurrentUserQuery();
   const activeUser = currentUserQuery.data;
@@ -100,7 +102,7 @@ export function AccountSwitcher() {
         <DropdownMenuItem asChild>
           <Link href="/dashboard/profile" prefetch={false}>
             <UserRound />
-            My profile
+            {t("profile.pageTitle")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

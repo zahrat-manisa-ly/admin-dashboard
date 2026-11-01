@@ -30,6 +30,8 @@ The skill contains the component, styling, composition, accessibility, and CLI r
 
 Do not modify files inside `src/components/ui/` or `src/components/calendar/`. Keep these components intact and apply styling or customization where they are used.
 
+After every shadcn block or page install, keep a single route for that screen. The CLI often adds a numbered preview such as `src/app/forgot-password-07/page.tsx`. Use the product route instead, for example `src/app/forgot-password/page.tsx`, and delete the preview page. The installed block may stay under `src/components/shadcn-studio/`; do not leave two `page.tsx` files that render the same screen.
+
 ## Setup
 
 This project uses npm.
@@ -82,7 +84,28 @@ Keep a component inside its route until it is reused by another feature. Do not 
 12. Handle relevant loading, empty, error, disabled, and overflow states.
 13. Keep screens accessible with semantic HTML, keyboard support, visible focus states, labels, and appropriate ARIA attributes.
 
+## Languages
+
+Every new page must support English and Arabic. Do not leave user-facing text hardcoded in the page.
+
+1. Add the same keys to both `src/i18n/messages/en/<scope>.json` and `src/i18n/messages/ar/<scope>.json`. Reuse an existing scope when the page belongs to it. Create a new pair of JSON files only when no scope fits.
+2. Register a new scope in `src/i18n/messages.ts` (`messageScopes` and both `en` and `ar` message maps).
+3. For a dashboard route whose locale follows the path, add its segment to `translatedPaths` in `src/i18n/locale.ts`.
+4. Render copy with `<T id="scope.key" />` from `@/i18n/t`, or `t("scope.key")` from `useI18n()`.
+
 ## Code conventions
+
+When adding or editing application code, wrap each logical section with a start comment and a matching end comment:
+
+```ts
+//--------header-------//
+//-------end-header----//
+
+//--------fetch-data----//
+//-------end-fetch-data----//
+```
+
+Use one short lowercase name. Separate words with a hyphen. The end comment prefixes that same name with `end-`. Inside JSX, keep the same text in a block comment: `{/* //--------fetch-data----// */}`. Do not add these comments inside `src/components/ui/` or `src/components/calendar/`.
 
 - TypeScript strict mode is enabled. Use precise types and avoid `any`.
 - Use the existing `@/` import aliases.

@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { useI18n } from "@/i18n/language-provider";
 import type { MyProfile, UpdateMyProfileRequest } from "@/lib/api/types/auth";
 import { notify } from "@/lib/notify";
 import { getInitials } from "@/lib/utils";
@@ -67,6 +68,7 @@ export function MyProfileDetailsSection({
   onSave: (input: UpdateMyProfileRequest) => Promise<void>;
   onDeleteAccount: (password: string) => Promise<void>;
 }) {
+  const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const [baseline, setBaseline] = useState(() => toDraft(profile));
   const [draft, setDraft] = useState(() => toDraft(profile));
@@ -91,12 +93,10 @@ export function MyProfileDetailsSection({
     const file = event.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      notify.error("Image must be under 10MB.");
+      notify.error(t("profile.imageTooLarge"));
       return;
     }
-    notify.warning(
-      "Image preview only. Upload to storage is not wired yet — use a profile image URL from your account.",
-    );
+    notify.warning(t("profile.imagePreviewOnly"));
     setPreviewUrl(URL.createObjectURL(file));
     event.target.value = "";
   };
@@ -104,7 +104,7 @@ export function MyProfileDetailsSection({
   const save = async () => {
     if (!isDirty || pending) return;
     if (!draft.first_name.trim() || !draft.last_name.trim()) {
-      notify.error("First and last name are required.");
+      notify.error(t("profile.namesRequired"));
       return;
     }
     await onSave(patch);
@@ -119,11 +119,11 @@ export function MyProfileDetailsSection({
 
   return (
     <div className="flex flex-col gap-6">
-      <SettingsSection title="Picture" description="Shown on your account and across the admin workspace.">
+      <SettingsSection title={t("profile.picture")} description={t("profile.pictureDescription")}>
         <div className="flex flex-wrap items-center gap-4">
           <Avatar className="size-16">
             {avatarSrc ? <AvatarImage src={avatarSrc} alt={displayName} /> : null}
-            <AvatarFallback className="text-lg font-semibold">{getInitials(displayName)}</AvatarFallback>
+            <AvatarFallback className="font-semibold text-lg">{getInitials(displayName)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap gap-2">
@@ -135,7 +135,7 @@ export function MyProfileDetailsSection({
                 onClick={() => inputRef.current?.click()}
               >
                 <UploadCloudIcon className="size-4" />
-                Upload
+                {t("profile.upload")}
               </Button>
               <Button
                 type="button"
@@ -148,23 +148,23 @@ export function MyProfileDetailsSection({
                 }}
               >
                 <Trash2Icon className="size-4" />
-                Remove
+                {t("profile.remove")}
               </Button>
             </div>
-            <p className="text-muted-foreground text-sm">Square PNG, JPEG, or GIF under 10MB.</p>
+            <p className="text-muted-foreground text-sm">{t("profile.imageHint")}</p>
           </div>
           <input ref={inputRef} type="file" accept="image/*" className="sr-only" onChange={upload} />
         </div>
       </SettingsSection>
 
       <SettingsSection
-        title="Your details"
-        description="How you appear to others in Manisa Travel Admin."
+        title={t("profile.yourDetails")}
+        description={t("profile.yourDetailsDescription")}
         action={
           <>
             <Button type="button" size="sm" disabled={!isDirty || pending} onClick={() => void save()}>
               {pending && <Spinner data-icon="inline-start" />}
-              Save changes
+              {t("profile.saveChanges")}
             </Button>
             <Button
               type="button"
@@ -176,14 +176,14 @@ export function MyProfileDetailsSection({
                 setPreviewUrl(null);
               }}
             >
-              Cancel
+              {t("profile.cancel")}
             </Button>
           </>
         }
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="my-profile-first-name">First name</Label>
+            <Label htmlFor="my-profile-first-name">{t("profile.firstName")}</Label>
             <Input
               id="my-profile-first-name"
               value={draft.first_name}
@@ -193,7 +193,7 @@ export function MyProfileDetailsSection({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="my-profile-last-name">Last name</Label>
+            <Label htmlFor="my-profile-last-name">{t("profile.lastName")}</Label>
             <Input
               id="my-profile-last-name"
               value={draft.last_name}
@@ -203,7 +203,7 @@ export function MyProfileDetailsSection({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="my-profile-username">Username</Label>
+            <Label htmlFor="my-profile-username">{t("profile.username")}</Label>
             <Input
               id="my-profile-username"
               value={draft.username}
@@ -215,7 +215,7 @@ export function MyProfileDetailsSection({
           </div>
           {!isOwner ? (
             <div className="flex flex-col gap-2">
-              <Label htmlFor="my-profile-occupation">Occupation</Label>
+              <Label htmlFor="my-profile-occupation">{t("profile.occupation")}</Label>
               <Input
                 id="my-profile-occupation"
                 value={draft.occupation}
@@ -226,33 +226,31 @@ export function MyProfileDetailsSection({
             </div>
           ) : null}
           <div className="flex flex-col gap-2 sm:col-span-2">
-            <Label htmlFor="my-profile-email">Email</Label>
+            <Label htmlFor="my-profile-email">{t("profile.email")}</Label>
             <Input id="my-profile-email" type="email" value={profile.email ?? ""} disabled readOnly dir="ltr" />
           </div>
         </div>
       </SettingsSection>
 
-      <SettingsSection title="Danger zone" description="Delete your account and everything associated with it.">
+      <SettingsSection title={t("profile.dangerZone")} description={t("profile.dangerDescription")}>
         <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
           <DialogTrigger asChild>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="text-destructive! border-destructive/40! hover:bg-destructive/10!"
+              className="border-destructive/40! text-destructive! hover:bg-destructive/10!"
             >
-              Delete account
+              {t("profile.deleteAccount")}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-100">
             <DialogHeader>
-              <DialogTitle>Delete your account?</DialogTitle>
-              <DialogDescription>
-                This permanently removes your profile and access. Enter your password to confirm.
-              </DialogDescription>
+              <DialogTitle>{t("profile.deleteAccountTitle")}</DialogTitle>
+              <DialogDescription>{t("profile.deleteAccountDescription")}</DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="my-profile-delete-password">Password</Label>
+              <Label htmlFor="my-profile-delete-password">{t("profile.password")}</Label>
               <Input
                 id="my-profile-delete-password"
                 type="password"
@@ -265,7 +263,7 @@ export function MyProfileDetailsSection({
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={deletePending}>
-                  Cancel
+                  {t("profile.cancel")}
                 </Button>
               </DialogClose>
               <Button
@@ -275,7 +273,7 @@ export function MyProfileDetailsSection({
                 onClick={() => void confirmDelete()}
               >
                 {deletePending && <Spinner data-icon="inline-start" />}
-                Delete account
+                {t("profile.deleteAccount")}
               </Button>
             </DialogFooter>
           </DialogContent>

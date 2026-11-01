@@ -1,11 +1,6 @@
 import { z } from "zod";
 
-import { allPermissions, type Permission } from "@/lib/auth/permissions";
-
-const permissionSchema = z.custom<Permission>(
-  (value) => typeof value === "string" && allPermissions.some((permission) => permission === value),
-  "Unknown permission",
-);
+const permissionSchema = z.string();
 
 export const userStatusSchema = z.enum(["active", "invited", "suspended"]);
 export const userSchema = z.object({
@@ -60,7 +55,11 @@ export const usersParamsSchema = z.object({
   roleId: z.string().default("all"),
   sort: z.enum(["name", "-name", "lastActive"]).default("name"),
   page: z.coerce.number().int().min(1).max(100000).catch(1).default(1),
-  pageSize: z.coerce.number().refine((value) => [5, 10, 25, 50].includes(value)).catch(5).default(5),
+  pageSize: z.coerce
+    .number()
+    .refine((value) => [5, 10, 25, 50].includes(value))
+    .catch(5)
+    .default(5),
 });
 
 export type TeamUser = z.infer<typeof userSchema>;

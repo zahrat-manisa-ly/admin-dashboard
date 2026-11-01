@@ -9,13 +9,12 @@ import {
   type RoleInput,
   roleSchema,
   type UserInput,
-  userSchema,
   type UsersParams,
+  type UserUpdate,
+  userSchema,
   userStatsSchema,
   usersPageSchema,
-  type UserUpdate,
 } from "@/lib/api/types/access";
-import { allPermissions } from "@/lib/auth/permissions";
 
 export const accessApi = {
   async currentUser(signal?: AbortSignal) {
@@ -29,9 +28,7 @@ export const accessApi = {
         status: profile.is_blocked ? "suspended" : "active",
         lastActive: profile.updated_at,
         roleName: profile.roles[0]?.name ?? profile.account_type,
-        permissions: profile.is_owner
-          ? allPermissions
-          : allPermissions.filter((permission) => profile.permissions.includes(permission)),
+        permissions: profile.permissions,
       });
     }
     return currentUserSchema.parse((await apiClient.get<unknown>(endpoints.auth.me, { signal })).data);
@@ -53,9 +50,7 @@ export const accessApi = {
     return z.array(userSchema).parse((await apiClient.get<unknown>(endpoints.auth.demoAccounts, { signal })).data);
   },
   async switchDemoAccount(userId: string) {
-    return currentUserSchema.parse(
-      (await apiClient.post<unknown>(endpoints.auth.demoSession, { userId })).data,
-    );
+    return currentUserSchema.parse((await apiClient.post<unknown>(endpoints.auth.demoSession, { userId })).data);
   },
   async users(params: UsersParams, signal?: AbortSignal) {
     return usersPageSchema.parse((await apiClient.get<unknown>(endpoints.users.list, { params, signal })).data);

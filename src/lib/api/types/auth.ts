@@ -27,6 +27,7 @@ export interface ConfirmRegistrationRequest {
   otp: string;
 }
 
+/** POST /api/v1/auth/forgot-password. Either identifier may be sent; the other is null. */
 export interface ForgotPasswordRequest {
   email?: string | null;
   phone_number?: string | null;
@@ -107,6 +108,14 @@ export interface UpdateMyProfileRequest {
 /** PATCH /api/v1/users/me response — UserResponse */
 export type UpdateMyProfileResponse = RegisteredUser;
 
+/** POST /api/v1/auth/reset-password. Token comes from the email link. */
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string;
+  confirm_password: string;
+  logout_other_sessions?: boolean;
+}
+
 /** POST /api/v1/auth/change-password */
 export interface ChangePasswordRequest {
   current_password: string;
@@ -120,5 +129,20 @@ export interface DeleteAccountRequest {
 }
 
 export interface ForgotPasswordResponse {
+  message: string;
+}
+
+/** GET /api/v1/auth/trusted-browsers */
+export interface TrustedBrowser {
+  id: string;
+  label: string;
+  created_at: string;
+  last_used_at: string;
+  expires_at: string;
+  current: boolean;
+}
+
+/** DELETE /api/v1/auth/trusted-browsers and DELETE /api/v1/auth/trusted-browsers/{browser_id} */
+export interface TrustedBrowserRevocationResponse {
   message: string;
 }

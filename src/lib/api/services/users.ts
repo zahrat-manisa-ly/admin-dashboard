@@ -1,7 +1,15 @@
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { authorizationApi } from "@/lib/api/services/authorization";
-import type { CreateUserRequest, Invitation, Page, UpdateEmployeeRequest, User } from "@/lib/api/types/users";
+import type {
+  CreateUserRequest,
+  Invitation,
+  InvitationResendRequest,
+  ListInvitationsParams,
+  Page,
+  UpdateEmployeeRequest,
+  User,
+} from "@/lib/api/types/users";
 
 export const usersApi = {
   async list(page: number, size: number, signal?: AbortSignal): Promise<Page<User>> {
@@ -12,6 +20,24 @@ export const usersApi = {
   },
   async create(input: CreateUserRequest): Promise<Invitation> {
     return (await apiClient.post<Invitation>(endpoints.usersV1.list, input)).data;
+  },
+  async invitations(params: ListInvitationsParams, signal?: AbortSignal): Promise<Page<Invitation>> {
+    return (
+      await apiClient.get<Page<Invitation>>(endpoints.usersV1.invitations, {
+        params: {
+          page: params.page,
+          size: params.size,
+          include_history: params.includeHistory ?? false,
+        },
+        signal,
+      })
+    ).data;
+  },
+  async resendInvitation(id: string, input: InvitationResendRequest = {}): Promise<void> {
+    await apiClient.post(endpoints.usersV1.invitationResend(id), input);
+  },
+  async revokeInvitation(id: string): Promise<void> {
+    await apiClient.post(endpoints.usersV1.invitationRevoke(id));
   },
   async update(id: string, input: UpdateEmployeeRequest): Promise<User> {
     return (await apiClient.patch<User>(endpoints.usersV1.employee(id), input)).data;

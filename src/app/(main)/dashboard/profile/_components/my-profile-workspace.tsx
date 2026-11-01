@@ -5,7 +5,7 @@ import { type ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ShieldCheckIcon, UserIcon } from "lucide-react";
+import { MonitorSmartphoneIcon, ShieldCheckIcon, UserIcon } from "lucide-react";
 
 import { AccessError } from "@/app/(main)/dashboard/_components/access/access-feedback";
 import {
@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useI18n } from "@/i18n/language-provider";
 import { getApiErrorMessage } from "@/lib/api/api-error";
 import { isMockApi } from "@/lib/api/client";
 import { authApi } from "@/lib/api/services/auth";
@@ -31,35 +32,49 @@ import { cn } from "@/lib/utils";
 import { myProfileKey } from "./my-profile.keys";
 import { MyProfileDetailsSection } from "./my-profile-details-section";
 import { MyProfileSecuritySection } from "./my-profile-security-section";
+import { MyProfileTrustedBrowsersSection } from "./my-profile-trusted-browsers-section";
 
-type SectionId = "profile" | "security";
+type SectionId = "profile" | "security" | "trusted-browsers";
 
 type NavItem = { id: SectionId; label: string; icon: ReactNode };
 
-const navItems: NavItem[] = [
-  { id: "profile", label: "Profile", icon: <UserIcon className="size-4" /> },
-  { id: "security", label: "Security", icon: <ShieldCheckIcon className="size-4" /> },
-];
-
 function ProfileInfoPanel({ profile }: { profile: MyProfile }) {
-  const primaryRole = profile.roles[0]?.name ?? profile.account_type;
+  const { t } = useI18n();
+  const accountTypeLabel = {
+    employee: t("profile.accountEmployee"),
+    customer: t("profile.accountCustomer"),
+    owner: t("profile.accountOwner"),
+  }[profile.account_type];
+  const primaryRole = profile.roles[0]?.name ?? accountTypeLabel;
   return (
-    <SettingsInfoCard title="Account">
+    <SettingsInfoCard title={t("profile.account")}>
       <SettingsInfoRow
-        label="Your role"
+        label={t("profile.yourRole")}
         icon={<ShieldCheckIcon className="size-3.5 shrink-0 opacity-70" />}
         value={<Badge variant="secondary">{primaryRole}</Badge>}
       />
-      <SettingsInfoRow label="Account type" value={profile.account_type} />
-      {profile.employee_id ? <SettingsInfoRow label="Employee ID" value={profile.employee_id} /> : null}
+      <SettingsInfoRow label={t("profile.accountType")} value={accountTypeLabel} />
+      {profile.employee_id ? <SettingsInfoRow label={t("profile.employeeId")} value={profile.employee_id} /> : null}
     </SettingsInfoCard>
   );
 }
 
 export function MyProfileWorkspace() {
+  const { t } = useI18n();
   const router = useRouter();
   const client = useQueryClient();
   const [activeSection, setActiveSection] = useState<SectionId>("profile");
+  //--------navigation----//
+  const navItems: NavItem[] = [
+    { id: "profile", label: t("profile.navProfile"), icon: <UserIcon className="size-4" /> },
+    { id: "security", label: t("profile.navSecurity"), icon: <ShieldCheckIcon className="size-4" /> },
+    {
+      id: "trusted-browsers",
+      label: t("profile.navTrustedBrowsers"),
+      icon: <MonitorSmartphoneIcon className="size-4" />,
+    },
+  ];
+  //-------end-navigation----//
 
   const profileQuery = useQuery({
     queryKey: myProfileKey,
@@ -79,7 +94,7 @@ export function MyProfileWorkspace() {
     mutationFn: (input: UpdateMyProfileRequest) => authApi.updateMyProfile(input),
     onSuccess: async () => {
       await invalidateSession();
-      notify.success("Profile updated");
+      notify.success(t("profile.profileUpdated"));
     },
     onError: (error) => notify.error(getApiErrorMessage(error)),
   });
@@ -87,7 +102,7 @@ export function MyProfileWorkspace() {
   const changePassword = useMutation({
     mutationKey: ["session", "my-profile", "change-password"],
     mutationFn: (input: ChangePasswordRequest) => authApi.changePassword(input),
-    onSuccess: () => notify.success("Password updated"),
+    onSuccess: () => notify.success(t("profile.passwordUpdated")),
     onError: (error) => notify.error(getApiErrorMessage(error)),
   });
 
@@ -104,11 +119,7 @@ export function MyProfileWorkspace() {
   });
 
   if (isMockApi) {
-    return (
-      <p className="text-muted-foreground text-sm">
-        My profile requires the live API. Set <code className="text-xs">NEXT_PUBLIC_API_MODE=python</code> and sign in.
-      </p>
-    );
+    return <p className="text-muted-foreground text-sm">{t("profile.mockApi")}</p>;
   }
 
   if (profileQuery.isPending) {
@@ -131,8 +142,8 @@ export function MyProfileWorkspace() {
     <section className="py-3">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">My profile</h1>
-          <p className="text-muted-foreground text-sm">Manage your personal details and account security.</p>
+          <h1 className="font-bold text-2xl">{t("profile.pageTitle")}</h1>
+          <p className="text-muted-foreground text-sm">{t("profile.pageDescription")}</p>
         </div>
 
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
@@ -145,7 +156,7 @@ export function MyProfileWorkspace() {
                   type="button"
                   onClick={() => setActiveSection(item.id)}
                   className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+                    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-start font-medium text-sm transition-colors",
                     isActive
                       ? "bg-primary/15 text-primary"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -161,7 +172,7 @@ export function MyProfileWorkspace() {
           <div className="lg:hidden">
             <Select value={activeSection} onValueChange={(value) => value && setActiveSection(value as SectionId)}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a section" />
+                <SelectValue placeholder={t("profile.selectSection")} />
               </SelectTrigger>
               <SelectContent className="w-(--anchor-width)">
                 {navItems.map((item) => (
@@ -178,6 +189,7 @@ export function MyProfileWorkspace() {
 
           <div className="min-w-0 flex-1 xl:grid xl:grid-cols-[minmax(0,1fr)_17rem] xl:items-start xl:gap-8">
             <div className="flex min-w-0 flex-col gap-6">
+              {/* //--------sections----// */}
               {activeSection === "profile" ? (
                 <MyProfileDetailsSection
                   profile={profile}
@@ -186,12 +198,15 @@ export function MyProfileWorkspace() {
                   onSave={(input) => updateProfile.mutateAsync(input)}
                   onDeleteAccount={(password) => deleteAccount.mutateAsync({ password })}
                 />
-              ) : (
+              ) : null}
+              {activeSection === "security" ? (
                 <MyProfileSecuritySection
                   pending={changePassword.isPending}
                   onChangePassword={(input) => changePassword.mutateAsync(input)}
                 />
-              )}
+              ) : null}
+              {activeSection === "trusted-browsers" ? <MyProfileTrustedBrowsersSection /> : null}
+              {/* //-------end-sections----// */}
             </div>
 
             {activeSection === "profile" ? (
