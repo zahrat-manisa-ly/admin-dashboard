@@ -1,0 +1,20 @@
+[mcp_servers.shadcn]
+command = "npx"
+args = [
+    "shadcn@latest",
+    "mcp",
+]
+
+[mcp_servers.shadcn-studio-mcp]
+command = "npx"
+args = [
+    "-y",
+    "shadcn-studio-mcp",
+]
+
+[mcp_servers.shadcn-studio-mcp.env]
+API_KEY = "E26E0B3B-DFF5-409E-95D0-12C5257FB5DC"
+EMAIL = "abdulmaein.elarefi@gmail.com"
+
+[mcp_servers.vercel]
+url = "https://mcp.vercel.com"

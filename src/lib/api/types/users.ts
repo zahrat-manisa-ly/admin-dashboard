@@ -12,7 +12,10 @@ export interface Page<T> {
 
 /** GET /api/v1/users/c */
 export interface CustomerListKpis {
-  total_customers: number;
+  total_customers?: number;
+  active_customers?: number;
+  blocked_customers?: number;
+  new_this_month?: number;
 }
 
 export interface CustomerListResponse extends Page<User> {

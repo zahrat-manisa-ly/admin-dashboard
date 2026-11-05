@@ -8,7 +8,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { RoleWithPermissionsResponse } from "@/lib/api/types/authorization";
 
-import type { UsersUiStatus } from "./filter-users";
+import type { UsersUiStatus } from "./users-filters";
 
 type UsersDirectoryToolbarProps = {
   ar: boolean;

@@ -39,11 +39,16 @@ import { usersApi } from "@/lib/api/services/users";
 import type { User } from "@/lib/api/types/users";
 import { notify } from "@/lib/notify";
 
-import { filterUsers, filterUsersByRoleId, isTeamDirectoryUser, userDirectoryStats } from "./filter-users";
 import { InvitationsTable } from "./invitations-table";
-import { useUsersFilters } from "./use-users-filters";
 import { UserEditor } from "./user-editor";
 import { UsersDirectoryToolbar } from "./users-directory-toolbar";
+import {
+  filterUsers,
+  filterUsersByRoleId,
+  isTeamDirectoryUser,
+  userDirectoryStats,
+  useUsersFilters,
+} from "./users-filters";
 import { UsersStatsCards } from "./users-stats-cards";
 
 const SNAPSHOT_CAP = 200;

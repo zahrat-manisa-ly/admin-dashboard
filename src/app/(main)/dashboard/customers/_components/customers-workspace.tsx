@@ -15,6 +15,8 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { useI18n } from "@/i18n/language-provider";
 import { customersApi } from "@/lib/api/services/customers";
 
+import { CustomersKpis } from "./customers-kpis";
+
 export function CustomersWorkspace() {
   const { locale, formatNumber } = useI18n();
   const ar = locale === "ar";
@@ -69,11 +71,13 @@ export function CustomersWorkspace() {
       <div className="flex flex-col gap-1">
         <h1 className="font-semibold text-2xl tracking-tight">{ar ? "العملاء" : "Customers"}</h1>
         <p className="text-muted-foreground text-sm">
-          {ar
-            ? `${formatNumber(customersQuery.data.kpis.total_customers)} عميل في المنصة.`
-            : `${formatNumber(customersQuery.data.kpis.total_customers)} customers on the platform.`}
+          {ar ? "حسابات العملاء المسجّلة في المنصة." : "Customer accounts registered on the platform."}
         </p>
       </div>
+
+      {/* //--------kpis----// */}
+      <CustomersKpis kpis={customersQuery.data.kpis} formatNumber={formatNumber} ar={ar} />
+      {/* //-------end-kpis----// */}
 
       <Card className="gap-0 py-0">
         <div className="border-b px-4 py-4">

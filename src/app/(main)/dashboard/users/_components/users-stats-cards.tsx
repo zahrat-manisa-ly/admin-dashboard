@@ -6,6 +6,7 @@ import { Clock3, UserCheck, UserRound, UserX } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 type UsersStatsCardsProps = {
   total: number;
@@ -70,6 +71,11 @@ export function UsersStatsCards({
                       {formatNumber(values[card.key])}
                     </h4>
                     <p className="text-muted-foreground text-xs">{label}</p>
+                    {/* //--------view-invites----// */}
+                    <p className={cn("font-medium text-primary text-xs", pendingActive && "underline")}>
+                      {ar ? "عرض الدعوات" : "View invitations"}
+                    </p>
+                    {/* //-------end-view-invites----// */}
                   </div>
                   <Icon className="size-5 shrink-0 text-muted-foreground/45" aria-hidden="true" />
                 </button>
