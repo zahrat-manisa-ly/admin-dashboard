@@ -1,0 +1,9 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_MODE: python
+        NEXT_PUBLIC_API_URL: https://test.zahrat-manisa.ly/
+    ports:
+      - "3000:3000"
