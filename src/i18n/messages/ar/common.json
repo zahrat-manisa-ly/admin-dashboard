@@ -267,5 +267,9 @@
   "previousMonth": "الشهر السابق",
   "nextMonth": "الشهر التالي",
   "gateAssignedDeparture": "تم تحديد البوابة {gate} للمغادرة.",
-  "cardEnding": "{brand} تنتهي بـ {last4}"
+  "cardEnding": "{brand} تنتهي بـ {last4}",
+  "serverUnreachableTitle": "تعذّر الاتصال بالخادم",
+  "serverUnreachableDetail": "تحقق من اتصالك بالإنترنت وحاول مرة أخرى.",
+  "serverUnreachable": "تعذّر الاتصال بالخادم. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.",
+  "tryAgain": "إعادة المحاولة"
 }

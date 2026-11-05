@@ -267,5 +267,9 @@
   "previousMonth": "Previous month",
   "nextMonth": "Next month",
   "gateAssignedDeparture": "Gate {gate} assigned for departure.",
-  "cardEnding": "{brand} ending {last4}"
+  "cardEnding": "{brand} ending {last4}",
+  "serverUnreachableTitle": "Could not reach the server",
+  "serverUnreachableDetail": "Check your internet connection and try again.",
+  "serverUnreachable": "Could not reach the server. Check your internet connection and try again.",
+  "tryAgain": "Try again"
 }

@@ -1,6 +1,10 @@
 import axios from "axios";
 import { z } from "zod";
 
+import { parseLocale } from "@/i18n/locale";
+import { messages } from "@/i18n/messages";
+import { messageById } from "@/i18n/translate-value";
+
 const errorBodySchema = z.object({
   message: z.string().optional(),
   detail: z
@@ -37,7 +41,26 @@ export function normalizeApiError(error: unknown): Error {
   }
   return error instanceof Error ? error : new ApiError("Unexpected request error.", 0);
 }
+//--------unreachable-error----//
+export function isUnreachableError(error: unknown) {
+  if (axios.isCancel(error)) return false;
+  if (error instanceof ApiError) return error.status === 0 && error.message !== "Request cancelled.";
+  if (axios.isAxiosError(error)) return error.response == null;
+  return false;
+}
+
+function unreachableMessage() {
+  const locale = typeof document === "undefined" ? "en" : parseLocale(document.documentElement.lang);
+  return (
+    messageById(messages[locale], "common.serverUnreachable") ??
+    messageById(messages.en, "common.serverUnreachable") ??
+    "Could not reach the server. Check your internet connection and try again."
+  );
+}
+//-------end-unreachable-error----//
+
 //function for displaying the error message into alert or toast
 export function getApiErrorMessage(error: unknown) {
+  if (isUnreachableError(error)) return unreachableMessage();
   return normalizeApiError(error).message;
 }
