@@ -135,7 +135,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </span>
                 {/* //-------end-brand-logo----// */}
                 {/* //--------brand-emblem----// */}
-                <span className="relative hidden size-5 shrink-0 group-data-[collapsible=icon]:block">
+                <span className="relative hidden size-8 shrink-0 group-data-[collapsible=icon]:block">
                   <Image
                     src="/logo/manisa-emblem-color.svg"
                     alt=""
