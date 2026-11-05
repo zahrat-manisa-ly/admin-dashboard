@@ -14,5 +14,10 @@
   "rolesPermissions": "Roles & Permissions",
   "userManagement": "User Management",
   "refunds": "Refunds",
-  "tagline": "Travel & Tourism"
+  "tagline": "Travel & Tourism",
+  "themeMenu": "Theme settings",
+  "themeMode": "Appearance",
+  "themePreset": "Color preset",
+  "themeModeLight": "Light",
+  "themeModeDark": "Dark"
 }

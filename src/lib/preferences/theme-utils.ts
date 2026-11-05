@@ -18,5 +18,5 @@ export function applyThemeMode(mode: ThemeMode): ResolvedThemeMode {
 }
 
 export function isDarkThemeMode(mode: ThemeMode): boolean {
-  return mode === "dark" || mode === "manisa";
+  return mode === "dark";
 }

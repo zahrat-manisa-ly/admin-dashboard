@@ -1,7 +1,6 @@
 export const THEME_MODE_OPTIONS = [
   { label: "Light", value: "light" },
   { label: "Dark", value: "dark" },
-  { label: "Manisa", value: "manisa" },
 ] as const;
 
 export const THEME_MODE_VALUES = THEME_MODE_OPTIONS.map((o) => o.value);
@@ -15,8 +14,8 @@ export const THEME_PRESET_OPTIONS = [
     label: "Default",
     value: "default",
     primary: {
-      light: "var(--primary-700)",
-      dark: "var(--primary-500)",
+      light: "oklch(0.205 0 0)",
+      dark: "oklch(0.922 0 0)",
     },
   },
   {
@@ -25,6 +24,14 @@ export const THEME_PRESET_OPTIONS = [
     primary: {
       light: "oklch(0.6489 0.237 26.9728)",
       dark: "oklch(0.7044 0.1872 23.1858)",
+    },
+  },
+  {
+    label: "Manisa",
+    value: "manisa",
+    primary: {
+      light: "oklch(0.3905 0.0726 229.04)",
+      dark: "oklch(0.7 0.09 229)",
     },
   },
   {

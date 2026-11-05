@@ -14,5 +14,10 @@
   "rolesPermissions": "الأدوار والصلاحيات",
   "userManagement": "إدارة المستخدمين",
   "refunds": "الاسترداد",
-  "tagline": "سفر وسياحة"
+  "tagline": "سفر وسياحة",
+  "themeMenu": "إعدادات الثيم",
+  "themeMode": "المظهر",
+  "themePreset": "نظام الألوان",
+  "themeModeLight": "فاتح",
+  "themeModeDark": "داكن"
 }

@@ -62,7 +62,7 @@ export const PREFERENCE_REGISTRY = {
 
   theme_preset: definePreference({
     values: THEME_PRESET_VALUES,
-    defaultValue: "default",
+    defaultValue: "tangerine",
     persistence: "client-cookie",
     attribute: "data-theme-preset",
   }),
@@ -90,7 +90,7 @@ export const PREFERENCE_REGISTRY = {
 
   sidebar_variant: defineSSRPreference({
     values: SIDEBAR_VARIANT_VALUES,
-    defaultValue: "sidebar",
+    defaultValue: "inset",
     persistence: "client-cookie",
     attribute: "data-sidebar-variant",
   }),

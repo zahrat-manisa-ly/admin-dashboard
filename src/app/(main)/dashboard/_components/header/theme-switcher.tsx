@@ -1,35 +1,94 @@
 "use client";
 
-import { Moon, Sparkles, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 
 import { Button } from "@/components/ui/button";
-import type { ThemeMode } from "@/lib/preferences/theme";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useI18n } from "@/i18n/language-provider";
+import { THEME_MODE_OPTIONS, THEME_PRESET_OPTIONS, type ThemeMode, type ThemePreset } from "@/lib/preferences/theme";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
-const THEME_CYCLE: ThemeMode[] = ["light", "dark", "manisa"];
+//--------mode-icons----//
+const MODE_ICONS: Record<ThemeMode, typeof Sun> = {
+  light: Sun,
+  dark: Moon,
+};
+
+const MODE_LABEL_KEYS: Record<ThemeMode, "navigation.themeModeLight" | "navigation.themeModeDark"> = {
+  light: "navigation.themeModeLight",
+  dark: "navigation.themeModeDark",
+};
+//-------end-mode-icons----//
 
 export function ThemeSwitcher() {
-  const { themeMode, setPreference } = usePreferencesStore(
+  const { t } = useI18n();
+  const { themeMode, themePreset, resolvedThemeMode, setPreference } = usePreferencesStore(
     useShallow((state) => ({
       themeMode: state.values.theme_mode,
+      themePreset: state.values.theme_preset,
+      resolvedThemeMode: state.resolvedThemeMode,
       setPreference: state.setPreference,
     })),
   );
 
-  const cycleTheme = () => {
-    const currentIndex = THEME_CYCLE.indexOf(themeMode);
-    const safeIndex = currentIndex >= 0 ? currentIndex : 0;
-    const nextTheme = THEME_CYCLE[(safeIndex + 1) % THEME_CYCLE.length];
-
-    setPreference("theme_mode", nextTheme);
-  };
+  const CurrentIcon = MODE_ICONS[themeMode] ?? Sun;
 
   return (
-    <Button size="icon" onClick={cycleTheme} aria-label={`Current theme: ${themeMode}. Click to cycle themes`}>
-      <Sun className="hidden [html[data-theme-mode=light]_&]:block" />
-      <Moon className="hidden [html[data-theme-mode=dark]_&]:block" />
-      <Sparkles className="hidden [html[data-theme-mode=manisa]_&]:block" />
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="icon" aria-label={t("navigation.themeMenu")}>
+          <CurrentIcon />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-52">
+        {/* //--------theme-mode----// */}
+        <DropdownMenuLabel>{t("navigation.themeMode")}</DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={themeMode}
+          onValueChange={(value) => setPreference("theme_mode", value as ThemeMode)}
+        >
+          {THEME_MODE_OPTIONS.map((option) => {
+            const Icon = MODE_ICONS[option.value];
+
+            return (
+              <DropdownMenuRadioItem key={option.value} value={option.value}>
+                <Icon />
+                {t(MODE_LABEL_KEYS[option.value])}
+              </DropdownMenuRadioItem>
+            );
+          })}
+        </DropdownMenuRadioGroup>
+        {/* //-------end-theme-mode----// */}
+        <DropdownMenuSeparator />
+        {/* //--------theme-preset----// */}
+        <DropdownMenuLabel>{t("navigation.themePreset")}</DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={themePreset}
+          onValueChange={(value) => setPreference("theme_preset", value as ThemePreset)}
+        >
+          {THEME_PRESET_OPTIONS.map((preset) => (
+            <DropdownMenuRadioItem key={preset.value} value={preset.value}>
+              <span
+                className="size-2.5 shrink-0 rounded-full"
+                style={{
+                  backgroundColor: resolvedThemeMode === "dark" ? preset.primary.dark : preset.primary.light,
+                }}
+              />
+              {preset.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+        {/* //-------end-theme-preset----// */}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
