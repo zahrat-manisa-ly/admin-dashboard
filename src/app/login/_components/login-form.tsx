@@ -18,7 +18,7 @@ import { APP_CONFIG } from "@/config/app-config";
 import { getApiErrorMessage } from "@/lib/api/api-error";
 import { notify } from "@/lib/notify";
 
-export function LoginForm() {
+export function LoginForm({ onTermsRequired }: { onTermsRequired: (transactionToken: string) => void }) {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [email, setEmail] = useState("");
@@ -31,9 +31,7 @@ export function LoginForm() {
     try {
       const result = await login.mutateAsync({ email, password, remember_me: remember });
       if ("transaction_token" in result) {
-        notify.info("Terms acceptance required", {
-          description: "Your account must accept the current terms before sign-in.",
-        });
+        onTermsRequired(result.transaction_token);
         return;
       }
       if ("challenge_token" in result) {

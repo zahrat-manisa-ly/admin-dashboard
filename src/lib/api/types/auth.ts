@@ -43,6 +43,25 @@ export interface LoginTermsRequiredResponse {
   transaction_token: string;
 }
 
+export interface TermsSection {
+  title: string;
+  items: string[];
+}
+
+/** GET /api/v1/terms/current */
+export interface TermsDocument {
+  id: string;
+  version: string;
+  content: TermsSection[];
+  published_at: string;
+  is_current: boolean;
+}
+
+/** POST /api/v1/auth/login/accept-terms */
+export interface AcceptLoginTermsRequest {
+  transaction_token: string;
+}
+
 export interface MfaPublicMethod {
   id: string;
   type: string;
@@ -57,6 +76,8 @@ export interface MfaChallengeResponse {
   preferred_method: string | null;
   recovery_available: boolean;
 }
+
+export type AcceptLoginTermsResult = TokenResponse | MfaChallengeResponse;
 
 // Login can require accepting terms or MFA instead of returning an access token.
 export type LoginResult = TokenResponse | LoginTermsRequiredResponse | MfaChallengeResponse;

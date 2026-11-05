@@ -1,6 +1,7 @@
 import { apiClient, clearAccessToken, setAccessToken } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import type {
+  AcceptLoginTermsResult,
   ChangePasswordRequest,
   ConfirmRegistrationRequest,
   DeleteAccountRequest,
@@ -12,6 +13,7 @@ import type {
   RegisteredUser,
   RegisterRequest,
   ResetPasswordRequest,
+  TermsDocument,
   TrustedBrowser,
   TrustedBrowserRevocationResponse,
   UpdateMyProfileRequest,
@@ -25,6 +27,18 @@ export const authApi = {
     if ("access_token" in data) setAccessToken(data.access_token);
     return data;
   },
+  //--------login-terms----//
+  async getCurrentTerms(signal?: AbortSignal): Promise<TermsDocument> {
+    return (await apiClient.get<TermsDocument>(endpoints.terms.current, { signal })).data;
+  },
+  async acceptLoginTerms(transactionToken: string): Promise<AcceptLoginTermsResult> {
+    const { data } = await apiClient.post<AcceptLoginTermsResult>(endpoints.authV1.acceptLoginTerms, {
+      transaction_token: transactionToken,
+    });
+    if ("access_token" in data) setAccessToken(data.access_token);
+    return data;
+  },
+  //-------end-login-terms----//
   async register(input: RegisterRequest): Promise<unknown> {
     // Swagger does not specify the success response schema for this endpoint.
     return (await apiClient.post<unknown>(endpoints.authV1.register, input)).data;

@@ -4,16 +4,11 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { ApiError } from "@/lib/api/api-error";
 import { accessApi } from "@/lib/api/services/access";
-import type { UsersParams } from "@/lib/api/types/access";
 import { hasPermission, type Permission } from "@/lib/auth/permissions";
 import { currentUserKey } from "@/lib/query/query-client";
 
 export const accessKeys = {
   scope: (ownerId: string) => ["access", ownerId] as const,
-  users: (ownerId: string) => ["access", ownerId, "users"] as const,
-  list: (ownerId: string, params: UsersParams) => ["access", ownerId, "users", "list", params] as const,
-  user: (ownerId: string, id: string) => ["access", ownerId, "users", "detail", id] as const,
-  stats: (ownerId: string) => ["access", ownerId, "users", "stats"] as const,
   roles: (ownerId: string) => ["access", ownerId, "roles"] as const,
 };
 
@@ -42,18 +37,6 @@ export function usePermissions() {
 
   return { ...query, currentUser, can, ownerId: currentUser?.id ?? "anonymous" };
 }
-
-export const usersQueryOptions = (ownerId: string, params: UsersParams) =>
-  queryOptions({
-    queryKey: accessKeys.list(ownerId, params),
-    queryFn: ({ signal }) => accessApi.users(params, signal),
-  });
-
-export const userQueryOptions = (ownerId: string, id: string) =>
-  queryOptions({
-    queryKey: accessKeys.user(ownerId, id),
-    queryFn: ({ signal }) => accessApi.user(id, signal),
-  });
 
 export const rolesQueryOptions = (ownerId: string) =>
   queryOptions({

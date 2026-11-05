@@ -1,11 +1,22 @@
 import axios, { type AxiosAdapter } from "axios";
 
 import { ApiError, normalizeApiError } from "./api-error";
+import { endpoints } from "./endpoints";
 
-// Use the deployed API by default; the demo adapter is opt-in.
-const mode = process.env.NEXT_PUBLIC_API_MODE ?? "python";
+//--------api-env----//
+const mode = process.env.NEXT_PUBLIC_API_MODE;
+const baseURL = process.env.NEXT_PUBLIC_API_URL;
+
+if (mode !== "mock" && mode !== "python") {
+  throw new Error("Set NEXT_PUBLIC_API_MODE in .env to mock or python.");
+}
+
+if (!baseURL || !/^https?:\/\//.test(baseURL)) {
+  throw new Error("Set NEXT_PUBLIC_API_URL in .env to an absolute http(s) URL.");
+}
+
 export const isMockApi = mode === "mock";
-const baseURL = process.env.NEXT_PUBLIC_API_URL ?? "https://api-production-d8b2.up.railway.app";
+//-------end-api-env----//
 const accessTokenKey = "manisa_access_token";
 
 let accessToken: string | null | undefined;
@@ -56,12 +67,8 @@ export const apiClient = axios.create({
 // Validate and modify request configuration before sending it.
 apiClient.interceptors.request.use((config) => {
   if (typeof window === "undefined") throw new ApiError("API requests are browser-only.", 0);
-  if (mode !== "mock" && mode !== "python") throw new ApiError("Invalid NEXT_PUBLIC_API_MODE.", 0);
-  if (!isMockApi && (!baseURL || !/^https?:\/\//.test(baseURL))) {
-    throw new ApiError("Set NEXT_PUBLIC_API_URL to the absolute Python API URL.", 0);
-  }
   const token = getAccessToken();
-  if (!isMockApi && token && !["/auth/login", "/api/v1/auth/login"].includes(config.url ?? "")) {
+  if (!isMockApi && token && config.url !== endpoints.authV1.login) {
     config.headers.set("Authorization", `Bearer ${token}`);
   }
   return config;

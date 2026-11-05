@@ -1,20 +1,7 @@
-import { z } from "zod";
-
 import { apiClient, clearAccessToken, isMockApi, setAccessToken } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { authApi } from "@/lib/api/services/auth";
-import {
-  currentUserSchema,
-  loginResponseSchema,
-  type RoleInput,
-  roleSchema,
-  type UserInput,
-  type UsersParams,
-  type UserUpdate,
-  userSchema,
-  userStatsSchema,
-  usersPageSchema,
-} from "@/lib/api/types/access";
+import { currentUserSchema, loginResponseSchema, type RoleInput, roleSchema } from "@/lib/api/types/access";
 
 export const accessApi = {
   async currentUser(signal?: AbortSignal) {
@@ -31,55 +18,31 @@ export const accessApi = {
         permissions: profile.permissions,
       });
     }
-    return currentUserSchema.parse((await apiClient.get<unknown>(endpoints.auth.me, { signal })).data);
+    return currentUserSchema.parse((await apiClient.get<unknown>(endpoints.authV1.me, { signal })).data);
   },
   async login(input: { email: string; password: string }) {
-    const session = loginResponseSchema.parse((await apiClient.post<unknown>(endpoints.auth.login, input)).data);
+    const session = loginResponseSchema.parse((await apiClient.post<unknown>(endpoints.authV1.login, input)).data);
     setAccessToken(session.access_token);
     return session.user;
   },
   async logout() {
     if (!isMockApi) return authApi.logout();
     try {
-      await apiClient.post(endpoints.auth.logout);
+      await apiClient.post(endpoints.authV1.logout);
     } finally {
       clearAccessToken();
     }
   },
-  async demoAccounts(signal?: AbortSignal) {
-    return z.array(userSchema).parse((await apiClient.get<unknown>(endpoints.auth.demoAccounts, { signal })).data);
-  },
-  async switchDemoAccount(userId: string) {
-    return currentUserSchema.parse((await apiClient.post<unknown>(endpoints.auth.demoSession, { userId })).data);
-  },
-  async users(params: UsersParams, signal?: AbortSignal) {
-    return usersPageSchema.parse((await apiClient.get<unknown>(endpoints.users.list, { params, signal })).data);
-  },
-  async user(id: string, signal?: AbortSignal) {
-    return userSchema.parse((await apiClient.get<unknown>(endpoints.users.detail(id), { signal })).data);
-  },
-  async stats(signal?: AbortSignal) {
-    return userStatsSchema.parse((await apiClient.get<unknown>(endpoints.users.stats, { signal })).data);
-  },
-  async createUser(input: UserInput) {
-    return userSchema.parse((await apiClient.post<unknown>(endpoints.users.list, input)).data);
-  },
-  async updateUser(id: string, input: UserUpdate) {
-    return userSchema.parse((await apiClient.patch<unknown>(endpoints.users.detail(id), input)).data);
-  },
-  async deleteUser(id: string) {
-    await apiClient.delete(endpoints.users.detail(id));
-  },
   async roles(signal?: AbortSignal) {
-    return z.array(roleSchema).parse((await apiClient.get<unknown>(endpoints.roles.list, { signal })).data);
+    return roleSchema.array().parse((await apiClient.get<unknown>(endpoints.rolesV1.list, { signal })).data);
   },
   async createRole(input: RoleInput) {
-    return roleSchema.parse((await apiClient.post<unknown>(endpoints.roles.list, input)).data);
+    return roleSchema.parse((await apiClient.post<unknown>(endpoints.rolesV1.list, input)).data);
   },
   async updateRole(id: string, input: RoleInput) {
-    return roleSchema.parse((await apiClient.patch<unknown>(endpoints.roles.detail(id), input)).data);
+    return roleSchema.parse((await apiClient.patch<unknown>(endpoints.rolesV1.detail(id), input)).data);
   },
   async deleteRole(id: string) {
-    await apiClient.delete(endpoints.roles.detail(id));
+    await apiClient.delete(endpoints.rolesV1.detail(id));
   },
 };

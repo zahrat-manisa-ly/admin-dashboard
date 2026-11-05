@@ -1,14 +1,8 @@
-import Link from "next/link";
-
-import { ChevronLeftIcon } from "lucide-react";
-
 import { Card, CardContent } from "@/components/ui/card";
 import MarqueeGallery from "@/components/ui/marquee-gallery";
-import { Separator } from "@/components/ui/separator";
-import { SocialAuthButtons } from "@/components/ui/social-auth-buttons";
 import { APP_CONFIG } from "@/config/app-config";
 
-import { LoginForm } from "./login-form";
+import { LoginPanel } from "./login-panel";
 
 const galleryImages = [
   "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=380&auto=format&fit=crop",
@@ -52,32 +46,8 @@ export function LoginScreen() {
         </Card>
       </div>
 
-      <div className="flex h-full items-center justify-center space-y-6 sm:px-6 md:px-8">
-        <div className="flex w-full max-w-lg flex-col gap-6 p-6">
-          <div className="space-y-3">
-            <h2 className="text-2xl font-semibold md:text-3xl lg:text-4xl">Welcome back</h2>
-            <p className="text-muted-foreground">Sign in to your {APP_CONFIG.name} admin account</p>
-          </div>
-
-          <SocialAuthButtons intent="login" />
-
-          <div className="flex items-center gap-4">
-            <Separator className="flex-1" />
-            <p>Or</p>
-            <Separator className="flex-1" />
-          </div>
-
-          <div className="space-y-4">
-            <LoginForm />
-
-            <p className="text-muted-foreground text-center">
-              Don&apos;t have an account yet?{" "}
-              <Link href="/register" className="text-foreground hover:underline">
-                Sign up
-              </Link>
-            </p>
-          </div>
-        </div>
+      <div className="flex h-full items-center justify-center sm:px-6 md:px-8">
+        <LoginPanel />
       </div>
     </div>
   );
