@@ -1,0 +1,34 @@
+# The workflow name displayed in GitHub Actions
+name: Next.js CI
+
+# Define when the workflow should run
+on:
+  # Run automatically whenever changes are pushed to GitHub
+  push:
+    # The branch to monitor for new commits
+    # Change to master if your default branch is named master
+    branches:
+      - main
+
+  # Allow manual execution from the GitHub Actions tab
+  workflow_dispatch:
+
+# Define the jobs that GitHub will execute
+jobs:
+  # Job identifier; you can rename it in the future
+  build:
+    # Operating system used to run this job
+    # GitHub provides a hosted Ubuntu environment
+    runs-on: ubuntu-latest
+
+    # Steps executed sequentially within this job
+    steps:
+      # Download the repository files into the runner environment
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Build a Docker image to verify that the Dockerfile works
+      - name: Build Docker image
+        # Image name: nextjs-app, tag: test
+        # The dot (.) specifies the repository root as the build context
+        run: docker build -t nextjs-app:test .
