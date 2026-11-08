@@ -1,34 +1,53 @@
-# The workflow name displayed in GitHub Actions
-name: Next.js CI
+
+# Workflow name displayed in GitHub Actions
+name: Next.js CI/CD
 
 # Define when the workflow should run
 on:
-  # Run automatically whenever changes are pushed to GitHub
+  # Run automatically when changes are pushed to main
   push:
-    # The branch to monitor for new commits
-    # Change to master if your default branch is named master
     branches:
       - main
 
-  # Allow manual execution from the GitHub Actions tab
+  # Allow manual execution from the Actions tab
   workflow_dispatch:
 
-# Define the jobs that GitHub will execute
+# Define permissions for repository access and package publishing
+permissions:
+  contents: read
+  packages: write
+
+# Define the jobs executed by GitHub Actions
 jobs:
-  # Job identifier; you can rename it in the future
   build:
-    # Operating system used to run this job
-    # GitHub provides a hosted Ubuntu environment
+    # Use a GitHub-hosted Ubuntu runner
     runs-on: ubuntu-latest
 
-    # Steps executed sequentially within this job
+    # Execute the workflow steps sequentially
     steps:
-      # Download the repository files into the runner environment
+      # Download the repository source code
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      # Build a Docker image to verify that the Dockerfile works
-      - name: Build Docker image
-        # Image name: nextjs-app, tag: test
-        # The dot (.) specifies the repository root as the build context
-        run: docker build -t nextjs-app:test .
+      # Authenticate with GitHub Container Registry
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build the Docker image and push it to GHCR
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          # Use the repository root as the Docker build context
+          context: .
+
+          # Publish the image to GitHub Container Registry
+          push: true
+
+          # Create a stable tag and a unique tag for this commit
+          tags: |
+            ghcr.io/zahrat-manisa-ly/admin-dashboard:latest
+            ghcr.io/zahrat-manisa-ly/admin-dashboard:${{ github.sha }}
