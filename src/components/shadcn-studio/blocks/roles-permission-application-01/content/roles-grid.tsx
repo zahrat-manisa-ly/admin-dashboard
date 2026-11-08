@@ -7,7 +7,7 @@ import RoleCard from "@/components/shadcn-studio/blocks/roles-permission-applica
 import RoleFormDialog from "@/components/shadcn-studio/blocks/roles-permission-application-01/content/role-form-dialog";
 // Type Imports
 import type {
-  AppRoleWithUsers,
+  AppRole,
   ResourcePermissions,
 } from "@/components/shadcn-studio/blocks/roles-permission-application-01/roles-permission-application-01";
 // Component Imports
@@ -18,7 +18,7 @@ import { IconPlaceholder } from "@/registry/icons/icon-placeholder";
 type RoleFormPayload = { name: string; permissions: ResourcePermissions[] };
 
 type RolesGridProps = {
-  roles: AppRoleWithUsers[];
+  roles: AppRole[];
   template: ResourcePermissions[];
   ar?: boolean;
   onCreateRole?: (values: RoleFormPayload) => Promise<void>;

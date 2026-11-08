@@ -14,6 +14,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { useI18n } from "@/i18n/language-provider";
 import { customersApi } from "@/lib/api/services/customers";
+import { catalogStaleTime } from "@/lib/query/catalog";
 
 import { CustomersKpis } from "./customers-kpis";
 
@@ -40,6 +41,7 @@ export function CustomersWorkspace() {
     queryFn: ({ signal }) => customersApi.list({ page, size: pageSize, search: query }, signal),
     placeholderData: keepPreviousData,
     enabled: can("clients:read"),
+    staleTime: catalogStaleTime,
   });
 
   if (customersQuery.isPending) return <AccessSkeleton />;

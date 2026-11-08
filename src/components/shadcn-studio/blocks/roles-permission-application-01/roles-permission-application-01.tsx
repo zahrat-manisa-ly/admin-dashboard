@@ -26,17 +26,8 @@ export type AppRole = {
   permissions: ResourcePermissions[];
 };
 
-export type RoleUser = {
-  id: string;
-  name: string;
-};
-
-export type AppRoleWithUsers = AppRole & {
-  users: RoleUser[];
-};
-
 type RolesPermissionApplication01Props = {
-  roles: AppRoleWithUsers[];
+  roles: AppRole[];
   template: ResourcePermissions[];
   actions: string[];
   ar?: boolean;

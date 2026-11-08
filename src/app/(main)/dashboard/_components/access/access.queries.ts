@@ -5,6 +5,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { ApiError } from "@/lib/api/api-error";
 import { accessApi } from "@/lib/api/services/access";
 import { hasPermission, type Permission } from "@/lib/auth/permissions";
+import { catalogStaleTime } from "@/lib/query/catalog";
 import { currentUserKey } from "@/lib/query/query-client";
 
 export const accessKeys = {
@@ -24,7 +25,7 @@ export function useCurrentUserQuery() {
       }
     },
     enabled: typeof window !== "undefined",
-    staleTime: 15000,
+    staleTime: catalogStaleTime,
   });
 }
 

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import RoleFormDialog from "@/components/shadcn-studio/blocks/roles-permission-application-01/content/role-form-dialog";
 // Type Imports
 import type {
-  AppRoleWithUsers,
+  AppRole,
   ResourcePermissions,
 } from "@/components/shadcn-studio/blocks/roles-permission-application-01/roles-permission-application-01";
 // Component Imports
@@ -34,7 +34,7 @@ import {
 import { IconPlaceholder } from "@/registry/icons/icon-placeholder";
 
 type RoleCardProps = {
-  role: AppRoleWithUsers;
+  role: AppRole;
   ar?: boolean;
   onUpdateRole?: (roleId: string, values: { name: string; permissions: ResourcePermissions[] }) => Promise<void>;
   onDeleteRole?: (roleId: string) => Promise<void>;
@@ -66,18 +66,10 @@ const RoleCard = ({
   }));
   const total = permCounts.reduce((sum, item) => sum + item.count, 0);
 
-  const memberCount = role.users.length;
-
   const handleConfirmDelete = async () => {
     try {
       if (onDeleteRole) await onDeleteRole(role.id);
-      else {
-        toast.success(
-          memberCount > 0
-            ? `${role.name} role deleted along with ${memberCount} ${memberCount === 1 ? "member" : "members"}`
-            : `${role.name} role deleted`,
-        );
-      }
+      else toast.success(`${role.name} role deleted`);
       setDeleteDialogOpen(false);
     } catch {
       setDeleteDialogOpen(true);
@@ -89,12 +81,7 @@ const RoleCard = ({
       <Card>
         <CardContent className="flex flex-col gap-3">
           <div className="flex justify-between gap-2">
-            <div className="min-w-0">
-              <h4 className="font-medium text-base leading-tight">{role.name}</h4>
-              <p className="mt-0.5 text-muted-foreground text-xs">
-                {role.users.length} {ar ? "مستخدم" : role.users.length === 1 ? "user" : "users"}
-              </p>
-            </div>
+            <h4 className="min-w-0 font-medium text-base leading-tight">{role.name}</h4>
             {(onUpdateRole ?? onDeleteRole) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

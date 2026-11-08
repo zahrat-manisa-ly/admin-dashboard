@@ -3,7 +3,7 @@
 import type { ComponentType } from "react";
 
 import type {
-  AppRoleWithUsers,
+  AppRole,
   ResourcePermissions,
 } from "@/components/shadcn-studio/blocks/roles-permission-application-01/roles-permission-application-01";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { IconPlaceholder } from "@/registry/icons/icon-placeholder";
 
 type PermissionsTableProps = {
-  roles: AppRoleWithUsers[];
+  roles: AppRole[];
   rows: ResourcePermissions[];
   actions: string[];
   ar?: boolean;
@@ -96,9 +96,6 @@ export default function PermissionsTable({
           {roles.map((role) => (
             <TableHead key={role.id} className="p-4 text-start!">
               <span className="block font-semibold">{role.name}</span>
-              <span className="block font-normal text-muted-foreground text-xs">
-                {role.users.length} {ar ? "مستخدم" : role.users.length === 1 ? "user" : "users"}
-              </span>
             </TableHead>
           ))}
         </TableRow>

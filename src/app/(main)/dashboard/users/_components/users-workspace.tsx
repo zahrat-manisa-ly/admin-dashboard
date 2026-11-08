@@ -38,6 +38,7 @@ import { getApiErrorMessage } from "@/lib/api/api-error";
 import { usersApi } from "@/lib/api/services/users";
 import type { User } from "@/lib/api/types/users";
 import { notify } from "@/lib/notify";
+import { authorizationKeys, catalogStaleTime } from "@/lib/query/catalog";
 
 import { InvitationsTable } from "./invitations-table";
 import { UserEditor } from "./user-editor";
@@ -78,9 +79,10 @@ export function UsersWorkspace() {
   });
 
   const rolesQuery = useQuery({
-    queryKey: ["users-v1", "roles"],
+    queryKey: authorizationKeys.roles,
     queryFn: ({ signal }) => usersApi.roles(signal),
     enabled: can("users:create") || can("roles:read"),
+    staleTime: catalogStaleTime,
   });
 
   const invitationsCount = useQuery({

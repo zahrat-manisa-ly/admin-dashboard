@@ -12,14 +12,11 @@ import RolesPermissionApplication01 from "@/components/shadcn-studio/blocks/role
 import { useI18n } from "@/i18n/language-provider";
 import { getApiErrorMessage } from "@/lib/api/api-error";
 import { authorizationApi } from "@/lib/api/services/authorization";
-import { usersApi } from "@/lib/api/services/users";
 import type { RoleWithPermissionsResponse } from "@/lib/api/types/authorization";
 import { groupPermissions, type PermissionMatrix } from "@/lib/auth/permissions";
 import { notify } from "@/lib/notify";
+import { authorizationKeys, catalogStaleTime } from "@/lib/query/catalog";
 import { currentUserKey } from "@/lib/query/query-client";
-
-const rolesKey = ["authorization", "roles"] as const;
-const permissionsKey = ["authorization", "permissions"] as const;
 
 function rowsFromMatrix(matrix: PermissionMatrix, assigned: Set<string>): ResourcePermissions[] {
   return matrix.resources.map((group) => ({
@@ -43,25 +40,21 @@ export function RolesWorkspace() {
   const { can } = usePermissions();
   const client = useQueryClient();
   const rolesQuery = useQuery({
-    queryKey: rolesKey,
+    queryKey: authorizationKeys.roles,
     queryFn: ({ signal }) => authorizationApi.roles(signal),
     enabled: can("roles:read"),
+    staleTime: catalogStaleTime,
   });
   const permissionsQuery = useQuery({
-    queryKey: permissionsKey,
+    queryKey: authorizationKeys.permissions,
     queryFn: ({ signal }) => authorizationApi.permissions(signal),
     enabled: can("roles:read"),
-  });
-  const usersQuery = useQuery({
-    queryKey: ["users-v1", "role-members"],
-    queryFn: ({ signal }) => usersApi.list(1, 100, signal),
-    enabled: can("users:read"),
+    staleTime: catalogStaleTime,
   });
 
   const refreshRoles = async () => {
     await Promise.all([
-      client.invalidateQueries({ queryKey: rolesKey }),
-      client.invalidateQueries({ queryKey: ["users-v1", "roles"] }),
+      client.invalidateQueries({ queryKey: authorizationKeys.roles }),
       client.invalidateQueries({ queryKey: currentUserKey }),
     ]);
   };
@@ -85,8 +78,7 @@ export function RolesWorkspace() {
     );
   }
 
-  const members = usersQuery.data?.items ?? [];
-  const roles = rolesQuery.data.map((role) => toBlockRole(role, matrix, members));
+  const roles = rolesQuery.data.map((role) => toBlockRole(role, matrix));
 
   async function changePermission(roleId: string, permissionId: string, value: boolean) {
     if (!can("roles:manage_permissions")) {
@@ -171,17 +163,10 @@ export function RolesWorkspace() {
   );
 }
 
-function toBlockRole(
-  role: RoleWithPermissionsResponse,
-  matrix: PermissionMatrix,
-  members: { id: string; first_name: string; last_name: string; roles?: { id: string }[] }[],
-) {
+function toBlockRole(role: RoleWithPermissionsResponse, matrix: PermissionMatrix) {
   return {
     id: role.id,
     name: role.name,
-    users: members
-      .filter((member) => member.roles?.some((memberRole) => memberRole.id === role.id))
-      .map((member) => ({ id: member.id, name: `${member.first_name} ${member.last_name}`.trim() })),
     permissions: rowsFromMatrix(matrix, new Set(role.permissions.map((permission) => permission.id))),
   };
 }
