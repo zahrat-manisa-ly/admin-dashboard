@@ -1,9 +1,6 @@
 services:
-  web:
-    build:
-      context: .
-      args:
-        NEXT_PUBLIC_API_MODE: python
-        NEXT_PUBLIC_API_URL: https://test.zahrat-manisa.ly/
+  admin-website:
+    image: ghcr.io/zahrat-manisa-ly/admin-dashboard:latest
     ports:
       - "3000:3000"
+    restart: unless-stopped
