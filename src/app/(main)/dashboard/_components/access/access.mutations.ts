@@ -3,33 +3,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { isMockApi } from "@/lib/api/client";
-import { accessApi } from "@/lib/api/services/access";
+import { accessApi, loadSessionAccount, type SessionAccount } from "@/lib/api/services/access";
 import { authApi } from "@/lib/api/services/auth";
-import type { CurrentUser, RoleInput } from "@/lib/api/types/access";
+import type { CurrentUser } from "@/lib/api/types/access";
 import type { AcceptLoginTermsResult, LoginResult } from "@/lib/api/types/auth";
 import { currentUserKey } from "@/lib/query/query-client";
-
-import { accessKeys, usePermissions } from "./access.queries";
-
-export function useAccessMutations() {
-  const client = useQueryClient();
-  const { ownerId } = usePermissions();
-  const invalidate = async () => {
-    await Promise.all([
-      client.invalidateQueries({ queryKey: accessKeys.scope(ownerId) }),
-      client.invalidateQueries({ queryKey: currentUserKey }),
-    ]);
-  };
-  const options = { mutationKey: ["access", ownerId], onSuccess: invalidate };
-  return {
-    createRole: useMutation({ ...options, mutationFn: accessApi.createRole }),
-    updateRole: useMutation({
-      ...options,
-      mutationFn: ({ id, input }: { id: string; input: RoleInput }) => accessApi.updateRole(id, input),
-    }),
-    deleteRole: useMutation({ ...options, mutationFn: accessApi.deleteRole }),
-  };
-}
 
 export function useSessionMutations() {
   const client = useQueryClient();
@@ -50,9 +28,10 @@ export function useSessionMutations() {
             }),
       onSuccess: async (result) => {
         if ("transaction_token" in result || "challenge_token" in result) return;
-        const user = "access_token" in result ? await accessApi.currentUser() : result;
+        const account: SessionAccount =
+          "access_token" in result ? await loadSessionAccount() : { profile: null, user: result };
         await reset();
-        client.setQueryData(currentUserKey, user);
+        client.setQueryData(currentUserKey, account);
       },
     }),
     acceptLoginTerms: useMutation<AcceptLoginTermsResult, Error, string>({
@@ -60,9 +39,9 @@ export function useSessionMutations() {
       mutationFn: (transactionToken) => authApi.acceptLoginTerms(transactionToken),
       onSuccess: async (result) => {
         if ("challenge_token" in result) return;
-        const user = await accessApi.currentUser();
+        const account = await loadSessionAccount();
         await reset();
-        client.setQueryData(currentUserKey, user);
+        client.setQueryData(currentUserKey, account);
       },
     }),
     logout: useMutation({

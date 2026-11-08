@@ -1,25 +1,45 @@
 import { apiClient, clearAccessToken, isMockApi, setAccessToken } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import { authApi } from "@/lib/api/services/auth";
-import { currentUserSchema, loginResponseSchema, type RoleInput, roleSchema } from "@/lib/api/types/access";
+import { type CurrentUser, currentUserSchema, loginResponseSchema } from "@/lib/api/types/access";
+import type { MyProfile } from "@/lib/api/types/auth";
+
+//--------session-account----//
+export type SessionAccount = {
+  profile: MyProfile | null;
+  user: CurrentUser;
+};
+
+function isMyProfile(account: MyProfile | CurrentUser): account is MyProfile {
+  return "account_type" in account;
+}
+
+export function toCurrentUser(account: MyProfile | CurrentUser): CurrentUser {
+  if (!isMyProfile(account)) return account;
+  return currentUserSchema.parse({
+    id: account.id,
+    name: `${account.first_name} ${account.last_name}`.trim(),
+    email: account.email ?? "",
+    roleId: account.roles[0]?.id ?? "",
+    status: account.is_blocked ? "suspended" : "active",
+    lastActive: account.updated_at,
+    roleName: account.roles[0]?.name ?? account.account_type,
+    permissions: account.permissions,
+  });
+}
+
+/** One GET /me. Python keeps the full profile; mock only has the reduced user. */
+export async function loadSessionAccount(signal?: AbortSignal): Promise<SessionAccount> {
+  if (!isMockApi) {
+    const profile = await authApi.getMyProfile(signal);
+    return { profile, user: toCurrentUser(profile) };
+  }
+  const user = currentUserSchema.parse((await apiClient.get<unknown>(endpoints.authV1.me, { signal })).data);
+  return { profile: null, user };
+}
+//-------end-session-account----//
 
 export const accessApi = {
-  async currentUser(signal?: AbortSignal) {
-    if (!isMockApi) {
-      const profile = await authApi.getMyProfile(signal);
-      return currentUserSchema.parse({
-        id: profile.id,
-        name: `${profile.first_name} ${profile.last_name}`.trim(),
-        email: profile.email ?? "",
-        roleId: profile.roles[0]?.id ?? "",
-        status: profile.is_blocked ? "suspended" : "active",
-        lastActive: profile.updated_at,
-        roleName: profile.roles[0]?.name ?? profile.account_type,
-        permissions: profile.permissions,
-      });
-    }
-    return currentUserSchema.parse((await apiClient.get<unknown>(endpoints.authV1.me, { signal })).data);
-  },
   async login(input: { email: string; password: string }) {
     const session = loginResponseSchema.parse((await apiClient.post<unknown>(endpoints.authV1.login, input)).data);
     setAccessToken(session.access_token);
@@ -32,17 +52,5 @@ export const accessApi = {
     } finally {
       clearAccessToken();
     }
-  },
-  async roles(signal?: AbortSignal) {
-    return roleSchema.array().parse((await apiClient.get<unknown>(endpoints.rolesV1.list, { signal })).data);
-  },
-  async createRole(input: RoleInput) {
-    return roleSchema.parse((await apiClient.post<unknown>(endpoints.rolesV1.list, input)).data);
-  },
-  async updateRole(id: string, input: RoleInput) {
-    return roleSchema.parse((await apiClient.patch<unknown>(endpoints.rolesV1.detail(id), input)).data);
-  },
-  async deleteRole(id: string) {
-    await apiClient.delete(endpoints.rolesV1.detail(id));
   },
 };

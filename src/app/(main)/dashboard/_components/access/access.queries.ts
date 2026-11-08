@@ -3,22 +3,27 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { ApiError } from "@/lib/api/api-error";
-import { accessApi } from "@/lib/api/services/access";
+import { isMockApi } from "@/lib/api/client";
+import { loadSessionAccount, type SessionAccount } from "@/lib/api/services/access";
 import { hasPermission, type Permission } from "@/lib/auth/permissions";
 import { catalogStaleTime } from "@/lib/query/catalog";
 import { currentUserKey } from "@/lib/query/query-client";
 
-export const accessKeys = {
-  scope: (ownerId: string) => ["access", ownerId] as const,
-  roles: (ownerId: string) => ["access", ownerId, "roles"] as const,
-};
+//--------session-account----//
+function selectCurrentUser(account: SessionAccount | null) {
+  return account?.user ?? null;
+}
 
-export function useCurrentUserQuery() {
-  return useQuery({
+function selectMyProfile(account: SessionAccount | null) {
+  return account?.profile ?? null;
+}
+
+export function sessionQueryOptions() {
+  return queryOptions({
     queryKey: currentUserKey,
     queryFn: async ({ signal }) => {
       try {
-        return await accessApi.currentUser(signal);
+        return await loadSessionAccount(signal);
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) return null;
         throw error;
@@ -29,6 +34,19 @@ export function useCurrentUserQuery() {
   });
 }
 
+export function useCurrentUserQuery() {
+  return useQuery({ ...sessionQueryOptions(), select: selectCurrentUser });
+}
+
+export function useMyProfileQuery() {
+  return useQuery({
+    ...sessionQueryOptions(),
+    enabled: !isMockApi && typeof window !== "undefined",
+    select: selectMyProfile,
+  });
+}
+//-------end-session-account----//
+
 export function usePermissions() {
   const query = useCurrentUserQuery();
   // Never render stale access controls after a failed permissions refresh.
@@ -36,16 +54,5 @@ export function usePermissions() {
 
   const can = (permission: Permission) => hasPermission(currentUser?.permissions ?? [], permission);
 
-  return { ...query, currentUser, can, ownerId: currentUser?.id ?? "anonymous" };
-}
-
-export const rolesQueryOptions = (ownerId: string) =>
-  queryOptions({
-    queryKey: accessKeys.roles(ownerId),
-    queryFn: ({ signal }) => accessApi.roles(signal),
-  });
-
-export function useRolesQuery() {
-  const { ownerId, can } = usePermissions();
-  return useQuery({ ...rolesQueryOptions(ownerId), enabled: can("roles:read") || can("users:read") });
+  return { ...query, currentUser, can };
 }

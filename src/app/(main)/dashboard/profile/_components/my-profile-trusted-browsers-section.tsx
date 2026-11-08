@@ -28,9 +28,7 @@ import { authApi } from "@/lib/api/services/auth";
 import type { TrustedBrowser } from "@/lib/api/types/auth";
 import { notify } from "@/lib/notify";
 
-import { myProfileKey } from "./my-profile.keys";
-
-const trustedBrowsersKey = [...myProfileKey, "trusted-browsers"] as const;
+const trustedBrowsersKey = ["session", "trusted-browsers"] as const;
 
 export function MyProfileTrustedBrowsersSection() {
   const { formatDateTime, t } = useI18n();

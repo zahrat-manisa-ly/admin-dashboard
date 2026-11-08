@@ -4,9 +4,10 @@ import { type ReactNode, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MonitorSmartphoneIcon, ShieldCheckIcon, UserIcon } from "lucide-react";
 
+import { useMyProfileQuery } from "@/app/(main)/dashboard/_components/access/access.queries";
 import { AccessError } from "@/app/(main)/dashboard/_components/access/access-feedback";
 import {
   SettingsInfoCard,
@@ -29,7 +30,6 @@ import { notify } from "@/lib/notify";
 import { currentUserKey } from "@/lib/query/query-client";
 import { cn } from "@/lib/utils";
 
-import { myProfileKey } from "./my-profile.keys";
 import { MyProfileDetailsSection } from "./my-profile-details-section";
 import { MyProfileSecuritySection } from "./my-profile-security-section";
 import { MyProfileTrustedBrowsersSection } from "./my-profile-trusted-browsers-section";
@@ -76,18 +76,13 @@ export function MyProfileWorkspace() {
   ];
   //-------end-navigation----//
 
-  const profileQuery = useQuery({
-    queryKey: myProfileKey,
-    queryFn: ({ signal }) => authApi.getMyProfile(signal),
-    enabled: !isMockApi,
-  });
+  //--------session-account----//
+  const profileQuery = useMyProfileQuery();
 
   const invalidateSession = async () => {
-    await Promise.all([
-      client.invalidateQueries({ queryKey: myProfileKey }),
-      client.invalidateQueries({ queryKey: currentUserKey }),
-    ]);
+    await client.invalidateQueries({ queryKey: currentUserKey });
   };
+  //-------end-session-account----//
 
   const updateProfile = useMutation({
     mutationKey: ["session", "my-profile", "update"],
