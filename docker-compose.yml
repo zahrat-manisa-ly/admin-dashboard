@@ -1,6 +1,14 @@
 services:
   admin-website:
     image: ghcr.io/zahrat-manisa-ly/admin-dashboard:latest
-    ports:
-      - "3000:3000"
+    # ports:
+    #   - "3000:3000"   
+    networks:
+      - default
+      - travel
     restart: unless-stopped
+
+networks:
+  travel:
+    external: true
+    name: travel_default
