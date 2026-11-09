@@ -21,6 +21,7 @@ export const endpoints = {
     customers: "/api/v1/admin/users/c",
     customer: (id: string) => `/api/v1/admin/users/c/${encodeURIComponent(id)}`,
     invitations: "/api/v1/admin/users/invitations",
+    invitationAccept: "/api/v1/users/invitations/accept",
     invitationResend: (id: string) => `/api/v1/admin/users/invitations/${encodeURIComponent(id)}/resend`,
     invitationRevoke: (id: string) => `/api/v1/admin/users/invitations/${encodeURIComponent(id)}/revoke`,
     detail: (id: string) => `/api/v1/admin/users/${encodeURIComponent(id)}`,

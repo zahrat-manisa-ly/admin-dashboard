@@ -48,6 +48,14 @@ export interface InvitationResendRequest {
   role_ids?: string[] | null;
 }
 
+/** POST /api/v1/users/invitations/accept — token comes from the invitation email link. */
+export interface InvitationAcceptRequest {
+  token: string;
+  password: string;
+  confirm_password: string;
+  terms_and_conditions: boolean;
+}
+
 // POST /api/v1/users sends an invitation, not a fully created user.
 export interface CreateUserRequest {
   email: string;

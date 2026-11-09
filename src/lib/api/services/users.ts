@@ -4,6 +4,7 @@ import { authorizationApi } from "@/lib/api/services/authorization";
 import type {
   CreateUserRequest,
   Invitation,
+  InvitationAcceptRequest,
   InvitationResendRequest,
   ListInvitationsParams,
   Page,
@@ -36,6 +37,11 @@ export const usersApi = {
   async resendInvitation(id: string, input: InvitationResendRequest = {}): Promise<void> {
     await apiClient.post(endpoints.usersV1.invitationResend(id), input);
   },
+  //--------accept-invitation----//
+  async acceptInvitation(input: InvitationAcceptRequest): Promise<User> {
+    return (await apiClient.post<User>(endpoints.usersV1.invitationAccept, input)).data;
+  },
+  //-------end-accept-invitation----//
   async revokeInvitation(id: string): Promise<void> {
     await apiClient.post(endpoints.usersV1.invitationRevoke(id));
   },
