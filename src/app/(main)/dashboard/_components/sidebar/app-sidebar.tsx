@@ -37,6 +37,8 @@ const translatedNavItems: Record<string, string> = {
   "/dashboard/customers": "navigation.customers",
   "/dashboard/support": "navigation.support",
   "/dashboard/transactions": "navigation.transactions",
+  "/dashboard/wallets": "navigation.wallets",
+  "/dashboard/wallet-operations": "navigation.walletOperations",
   "/dashboard/refunds": "navigation.refunds",
   "/dashboard/users": "navigation.users",
   "/dashboard/roles-permissions": "navigation.rolesPermissions",

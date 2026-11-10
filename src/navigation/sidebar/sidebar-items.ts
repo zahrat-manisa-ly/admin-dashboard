@@ -1,7 +1,9 @@
 import {
+  ArrowDownUp,
   Bell,
   ChartBar,
   CircleDollarSign,
+  CreditCard,
   Headset,
   LayoutDashboard,
   type LucideIcon,
@@ -146,6 +148,18 @@ export const sidebarItems: NavGroup[] = [
     id: 4,
     label: "Finance",
     items: [
+      {
+        id: "wallets",
+        title: "Wallets",
+        url: "/dashboard/wallets",
+        icon: CreditCard,
+      },
+      {
+        id: "wallet-operations",
+        title: "Wallet operations",
+        url: "/dashboard/wallet-operations",
+        icon: ArrowDownUp,
+      },
       {
         id: "transactions",
         title: "Transactions",

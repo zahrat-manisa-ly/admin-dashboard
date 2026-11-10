@@ -34,6 +34,30 @@ export const endpoints = {
     detail: (id: string) => `/api/v1/admin/authorization/roles/${encodeURIComponent(id)}`,
     rolePermissions: (id: string) => `/api/v1/admin/authorization/roles/${encodeURIComponent(id)}/permissions`,
   },
+  notificationsV1: {
+    list: "/api/v1/notifications/me",
+    detail: (id: string) => `/api/v1/notifications/me/${encodeURIComponent(id)}`,
+    read: (id: string) => `/api/v1/notifications/me/${encodeURIComponent(id)}/read`,
+    readAll: "/api/v1/notifications/me/read-all",
+  },
+  //--------admin-wallet----//
+  adminWalletV1: {
+    configuration: "/api/v1/admin/wallet/configuration",
+    customers: "/api/v1/admin/wallet/customers",
+    customer: (userId: string) => `/api/v1/admin/wallet/customers/${encodeURIComponent(userId)}`,
+    customerFreeze: (userId: string) => `/api/v1/admin/wallet/customers/${encodeURIComponent(userId)}/freeze`,
+    merchant: "/api/v1/admin/wallet/merchant",
+    merchantHistory: "/api/v1/admin/wallet/merchant/history",
+    withdrawals: "/api/v1/admin/wallet/withdrawals",
+    withdrawal: (withdrawalId: string) => `/api/v1/admin/wallet/withdrawals/${encodeURIComponent(withdrawalId)}`,
+    withdrawalAction: (withdrawalId: string, action: string) =>
+      `/api/v1/admin/wallet/withdrawals/${encodeURIComponent(withdrawalId)}/actions/${encodeURIComponent(action)}`,
+    withdrawalEvidence: (withdrawalId: string) =>
+      `/api/v1/admin/wallet/withdrawals/${encodeURIComponent(withdrawalId)}/evidence`,
+    transfers: "/api/v1/admin/wallet/transfers",
+    transfer: (transferId: string) => `/api/v1/admin/wallet/transfers/${encodeURIComponent(transferId)}`,
+  },
+  //-------end-admin-wallet----//
   bookings: {},
   flights: {},
   finance: {},

@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+import type { Metadata } from "next";
 
 const sections = {
   reconciliation: {
@@ -9,10 +10,6 @@ const sections = {
   promotions: {
     title: "Promotions",
     description: "Create and manage travel offers and promotional rules.",
-  },
-  notifications: {
-    title: "Notifications",
-    description: "Manage customer notification preferences and delivery.",
   },
   campaigns: {
     title: "Campaigns",
@@ -83,8 +80,8 @@ export default async function Page({ params }: PageProps<"/dashboard/[section]">
 
   return (
     <div className="flex flex-col gap-1">
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-      <p className="text-sm text-muted-foreground">{description}</p>
+      <h1 className="font-semibold text-2xl tracking-tight">{title}</h1>
+      <p className="text-muted-foreground text-sm">{description}</p>
     </div>
   );
 }

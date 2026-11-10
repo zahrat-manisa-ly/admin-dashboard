@@ -10,6 +10,8 @@
   "customers": "Customers",
   "support": "Support",
   "transactions": "Transactions",
+  "wallets": "Wallets",
+  "walletOperations": "Wallet operations",
   "users": "Users",
   "rolesPermissions": "Roles & Permissions",
   "userManagement": "User Management",

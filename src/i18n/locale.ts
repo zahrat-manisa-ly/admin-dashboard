@@ -17,9 +17,12 @@ export const translatedPaths = new Set([
   "customers",
   "support",
   "transactions",
+  "wallets",
+  "wallet-operations",
   "users",
   "roles-permissions",
   "profile",
+  "notifications",
 ]);
 
 export function parseLocale(value: string | undefined): Locale {
