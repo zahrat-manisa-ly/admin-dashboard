@@ -4,13 +4,14 @@ import type {
   CreateCustomerWalletRequest,
   CustomerWallet,
   CustomerWalletPage,
+  FreezeCommandResponse,
   FreezeDecision,
-  FreezeWalletResponse,
+  FreezeStateResponse,
   ListCustomerWalletsParams,
   MerchantWalletHistoryParams,
-  MerchantWalletHistoryResponse,
   MerchantWalletSummary,
   WalletConfiguration,
+  WalletHistoryResponse,
   WalletResponse,
 } from "@/lib/api/types/admin-wallet";
 
@@ -44,14 +45,23 @@ export const adminWalletApi = {
   //-------end-customer-wallets----//
 
   //--------wallet-freezes----//
-  async freezeCustomerWallet(userId: string, input: FreezeDecision): Promise<FreezeWalletResponse> {
+  async freezeCustomerWallet(userId: string, input: FreezeDecision): Promise<FreezeCommandResponse> {
     return (
-      await apiClient.post<FreezeWalletResponse>(endpoints.adminWalletV1.customerFreeze(userId), input, {
+      await apiClient.post<FreezeCommandResponse>(endpoints.adminWalletV1.customerFreeze(userId), input, {
         headers: {
           "Idempotency-Key": crypto.randomUUID(),
         },
       })
     ).data;
+  },
+
+  async getCustomerFreezeState(userId: string, signal?: AbortSignal): Promise<FreezeStateResponse> {
+    return (await apiClient.get<FreezeStateResponse>(endpoints.adminWalletV1.customerFreeze(userId), { signal })).data;
+  },
+
+  async getFreezeCommand(commandId: string, signal?: AbortSignal): Promise<FreezeCommandResponse> {
+    return (await apiClient.get<FreezeCommandResponse>(endpoints.adminWalletV1.freezeCommand(commandId), { signal }))
+      .data;
   },
   //-------end-wallet-freezes----//
 
@@ -63,9 +73,9 @@ export const adminWalletApi = {
   async getMerchantWalletHistory(
     params: MerchantWalletHistoryParams = {},
     signal?: AbortSignal,
-  ): Promise<MerchantWalletHistoryResponse> {
+  ): Promise<WalletHistoryResponse> {
     return (
-      await apiClient.get<MerchantWalletHistoryResponse>(endpoints.adminWalletV1.merchantHistory, {
+      await apiClient.get<WalletHistoryResponse>(endpoints.adminWalletV1.merchantHistory, {
         params: {
           ...(params.limit !== undefined ? { limit: params.limit } : {}),
           ...(params.beforeJournalId ? { before_journal_id: params.beforeJournalId } : {}),

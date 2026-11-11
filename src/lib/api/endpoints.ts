@@ -46,6 +46,7 @@ export const endpoints = {
     customers: "/api/v1/admin/wallet/customers",
     customer: (userId: string) => `/api/v1/admin/wallet/customers/${encodeURIComponent(userId)}`,
     customerFreeze: (userId: string) => `/api/v1/admin/wallet/customers/${encodeURIComponent(userId)}/freeze`,
+    freezeCommand: (commandId: string) => `/api/v1/admin/wallet/freezes/${encodeURIComponent(commandId)}`,
     merchant: "/api/v1/admin/wallet/merchant",
     merchantHistory: "/api/v1/admin/wallet/merchant/history",
     withdrawals: "/api/v1/admin/wallet/withdrawals",

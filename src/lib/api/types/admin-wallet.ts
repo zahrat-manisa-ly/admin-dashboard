@@ -40,6 +40,7 @@ export interface CustomerWalletMapping {
   wallet_id: string;
   owner_id: string;
   kyc_verified: boolean;
+  frozen: boolean;
   user_name?: string | null;
 }
 
@@ -58,11 +59,24 @@ export interface FreezeDecision {
   reason: string;
 }
 
+export type FreezeCommandStatus = "pending" | "applied" | "rejected";
+
 /**
- * The OpenAPI document does not declare the freeze response body.
- * Keep this unknown until the response contract is published.
+ * POST /api/v1/admin/wallet/customers/{user_id}/freeze
+ * GET /api/v1/admin/wallet/freezes/{command_id}
  */
-export type FreezeWalletResponse = unknown;
+export interface FreezeCommandResponse {
+  id: string;
+  customer_id: string;
+  status: FreezeCommandStatus;
+  requested_frozen: boolean;
+  frozen: boolean | null;
+}
+
+/** GET /api/v1/admin/wallet/customers/{user_id}/freeze */
+export interface FreezeStateResponse {
+  frozen: boolean;
+}
 //-------end-wallet-freezes----//
 
 //--------merchant-wallet----//
@@ -84,9 +98,24 @@ export interface MerchantWalletHistoryParams {
   beforeJournalId?: string | null;
 }
 
-/**
- * The OpenAPI document does not declare the journal body.
- * Keep this unknown until the response contract is published.
- */
-export type MerchantWalletHistoryResponse = unknown;
+export interface WalletHistoryItem {
+  journal_id: string;
+  created_at: string;
+  status: string;
+  book_change_minor: string;
+  transaction_kind?: string | null;
+  resource_type?: string | null;
+  resource_id?: string | null;
+  withdrawal_id?: string | null;
+  action?: string | null;
+  withdrawal_status?: string | null;
+  reversal_of_id?: string | null;
+}
+
+/** GET /api/v1/admin/wallet/merchant/history */
+export interface WalletHistoryResponse {
+  currency_code: string;
+  items: WalletHistoryItem[];
+  next_before_journal_id: string | null;
+}
 //-------end-merchant-wallet----//

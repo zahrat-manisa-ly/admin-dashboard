@@ -52,5 +52,22 @@
   "actionSuccess": "Withdrawal action submitted.",
   "evidenceUploaded": "Evidence uploaded.",
   "evidenceOpenFailed": "Could not open evidence.",
-  "notAvailable": "—"
+  "notAvailable": "—",
+  "customer": "Customer",
+  "parties": "Parties",
+  "pendingAction": "Pending action",
+  "fee": "Fee",
+  "totalDeduction": "Total deduction",
+  "expiresAt": "Expires at",
+  "payoutReference": "Payout reference",
+  "userId": "User ID",
+  "bankDetails": "Bank details",
+  "bankName": "Bank name",
+  "accountHolder": "Account holder",
+  "accountNumber": "Account number",
+  "iban": "IBAN",
+  "accountType": "Account type",
+  "bankBranch": "Bank branch",
+  "sender": "Sender",
+  "recipient": "Recipient"
 }

@@ -1,14 +1,14 @@
 import { apiClient } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 import type {
-  AdminTransferResponse,
-  AdminTransfersResponse,
-  AdminWithdrawalResponse,
-  AdminWithdrawalsResponse,
+  AdminTransferPage,
+  AdminWithdrawalDetail,
+  AdminWithdrawalPage,
   EvidenceDownloadResponse,
   EvidenceUploadResponse,
   ListAdminTransfersParams,
   ListAdminWithdrawalsParams,
+  TransferResponse,
   WithdrawalAction,
   WithdrawalActionDetails,
   WithdrawalActionResponse,
@@ -16,12 +16,9 @@ import type {
 
 export const adminWalletOperationApi = {
   //--------withdrawals----//
-  async listWithdrawals(
-    params: ListAdminWithdrawalsParams = {},
-    signal?: AbortSignal,
-  ): Promise<AdminWithdrawalsResponse> {
+  async listWithdrawals(params: ListAdminWithdrawalsParams = {}, signal?: AbortSignal): Promise<AdminWithdrawalPage> {
     return (
-      await apiClient.get<AdminWithdrawalsResponse>(endpoints.adminWalletV1.withdrawals, {
+      await apiClient.get<AdminWithdrawalPage>(endpoints.adminWalletV1.withdrawals, {
         params: {
           ...(params.page !== undefined ? { page: params.page } : {}),
           ...(params.size !== undefined ? { size: params.size } : {}),
@@ -32,8 +29,8 @@ export const adminWalletOperationApi = {
     ).data;
   },
 
-  async getWithdrawal(withdrawalId: string, signal?: AbortSignal): Promise<AdminWithdrawalResponse> {
-    return (await apiClient.get<AdminWithdrawalResponse>(endpoints.adminWalletV1.withdrawal(withdrawalId), { signal }))
+  async getWithdrawal(withdrawalId: string, signal?: AbortSignal): Promise<AdminWithdrawalDetail> {
+    return (await apiClient.get<AdminWithdrawalDetail>(endpoints.adminWalletV1.withdrawal(withdrawalId), { signal }))
       .data;
   },
 
@@ -70,9 +67,9 @@ export const adminWalletOperationApi = {
   //-------end-withdrawal-evidence----//
 
   //--------transfers----//
-  async listTransfers(params: ListAdminTransfersParams = {}, signal?: AbortSignal): Promise<AdminTransfersResponse> {
+  async listTransfers(params: ListAdminTransfersParams = {}, signal?: AbortSignal): Promise<AdminTransferPage> {
     return (
-      await apiClient.get<AdminTransfersResponse>(endpoints.adminWalletV1.transfers, {
+      await apiClient.get<AdminTransferPage>(endpoints.adminWalletV1.transfers, {
         params: {
           ...(params.page !== undefined ? { page: params.page } : {}),
           ...(params.size !== undefined ? { size: params.size } : {}),
@@ -83,8 +80,8 @@ export const adminWalletOperationApi = {
     ).data;
   },
 
-  async getTransfer(transferId: string, signal?: AbortSignal): Promise<AdminTransferResponse> {
-    return (await apiClient.get<AdminTransferResponse>(endpoints.adminWalletV1.transfer(transferId), { signal })).data;
+  async getTransfer(transferId: string, signal?: AbortSignal): Promise<TransferResponse> {
+    return (await apiClient.get<TransferResponse>(endpoints.adminWalletV1.transfer(transferId), { signal })).data;
   },
   //-------end-transfers----//
 };

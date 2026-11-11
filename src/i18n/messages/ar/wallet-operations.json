@@ -52,5 +52,22 @@
   "actionSuccess": "تم إرسال إجراء السحب.",
   "evidenceUploaded": "تم رفع الإثبات.",
   "evidenceOpenFailed": "تعذّر فتح الإثبات.",
-  "notAvailable": "—"
+  "notAvailable": "—",
+  "customer": "العميل",
+  "parties": "الأطراف",
+  "pendingAction": "الإجراء المعلّق",
+  "fee": "الرسوم",
+  "totalDeduction": "إجمالي الخصم",
+  "expiresAt": "ينتهي في",
+  "payoutReference": "مرجع الصرف",
+  "userId": "معرّف المستخدم",
+  "bankDetails": "بيانات البنك",
+  "bankName": "اسم البنك",
+  "accountHolder": "صاحب الحساب",
+  "accountNumber": "رقم الحساب",
+  "iban": "IBAN",
+  "accountType": "نوع الحساب",
+  "bankBranch": "فرع البنك",
+  "sender": "المرسل",
+  "recipient": "المستلم"
 }

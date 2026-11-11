@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { EyeIcon, PlusIcon, SnowflakeIcon, UserIcon, WalletIcon } from "lucide-react";
+import { EyeIcon, PlusIcon, SnowflakeIcon, UnlockIcon, UserIcon, WalletIcon } from "lucide-react";
 
 import { AccessError } from "@/app/(main)/dashboard/_components/access/access-feedback";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -88,10 +88,10 @@ export function CustomerWalletsPanel() {
 
   //--------freeze----//
   const freezeWallet = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      adminWalletApi.freezeCustomerWallet(id, { frozen: true, reason }),
-    onSuccess: async () => {
-      notify.success(t("wallets.frozenSuccess"));
+    mutationFn: ({ id, frozen, reason }: { id: string; frozen: boolean; reason: string }) =>
+      adminWalletApi.freezeCustomerWallet(id, { frozen, reason }),
+    onSuccess: async (_data, variables) => {
+      notify.success(variables.frozen ? t("wallets.frozenSuccess") : t("wallets.unfrozenSuccess"));
       setFreezeTarget(null);
       setFreezeReason("");
       setFreezeReasonError("");
@@ -121,8 +121,14 @@ export function CustomerWalletsPanel() {
       return;
     }
     setFreezeReasonError("");
-    freezeWallet.mutate({ id: freezeTarget.user_id, reason });
+    freezeWallet.mutate({
+      id: freezeTarget.user_id,
+      frozen: !freezeTarget.frozen,
+      reason,
+    });
   }
+
+  const freezeNextFrozen = freezeTarget ? !freezeTarget.frozen : true;
 
   const pageInfo = walletsQuery.data;
   const total = pageInfo?.total ?? 0;
@@ -219,6 +225,7 @@ export function CustomerWalletsPanel() {
                 <TableHead className="text-start">{t("wallets.customer")}</TableHead>
                 <TableHead className="text-start">{t("wallets.walletId")}</TableHead>
                 <TableHead className="text-start">{t("wallets.kyc")}</TableHead>
+                <TableHead className="text-start">{t("wallets.walletStatus")}</TableHead>
                 <TableHead className="text-end" />
               </TableRow>
             </TableHeader>
@@ -256,6 +263,14 @@ export function CustomerWalletsPanel() {
                         {item.kyc_verified ? t("wallets.verified") : t("wallets.notVerified")}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={item.frozen ? "outline" : "secondary"}
+                        className={item.frozen ? "font-normal" : "bg-primary/10 font-normal text-primary"}
+                      >
+                        {item.frozen ? t("wallets.frozen") : t("wallets.active")}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-end">
                       <div className="flex items-center justify-end gap-2">
                         <Button
@@ -268,8 +283,12 @@ export function CustomerWalletsPanel() {
                             setFreezeReasonError("");
                           }}
                         >
-                          <SnowflakeIcon data-icon="inline-start" />
-                          {t("wallets.freeze")}
+                          {item.frozen ? (
+                            <UnlockIcon data-icon="inline-start" />
+                          ) : (
+                            <SnowflakeIcon data-icon="inline-start" />
+                          )}
+                          {item.frozen ? t("wallets.unfreeze") : t("wallets.freeze")}
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => setSelectedUserId(item.user_id)}>
                           <EyeIcon data-icon="inline-start" />
@@ -353,8 +372,10 @@ export function CustomerWalletsPanel() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("wallets.freezeWallet")}</DialogTitle>
-            <DialogDescription>{t("wallets.freezeWalletDescription")}</DialogDescription>
+            <DialogTitle>{freezeNextFrozen ? t("wallets.freezeWallet") : t("wallets.unfreezeWallet")}</DialogTitle>
+            <DialogDescription>
+              {freezeNextFrozen ? t("wallets.freezeWalletDescription") : t("wallets.unfreezeWalletDescription")}
+            </DialogDescription>
           </DialogHeader>
           {freezeTarget ? (
             <div className="flex flex-col gap-3">
@@ -372,7 +393,9 @@ export function CustomerWalletsPanel() {
                   maxLength={500}
                   disabled={freezeWallet.isPending}
                   aria-invalid={freezeReasonError ? true : undefined}
-                  placeholder={t("wallets.freezeReasonPlaceholder")}
+                  placeholder={
+                    freezeNextFrozen ? t("wallets.freezeReasonPlaceholder") : t("wallets.unfreezeReasonPlaceholder")
+                  }
                   onChange={(event) => setFreezeReason(event.target.value)}
                 />
                 {freezeReasonError ? <FieldError>{freezeReasonError}</FieldError> : null}
@@ -387,7 +410,7 @@ export function CustomerWalletsPanel() {
             </DialogClose>
             <Button type="button" disabled={freezeWallet.isPending} onClick={submitFreeze}>
               {freezeWallet.isPending ? <Spinner data-icon="inline-start" /> : null}
-              {t("wallets.freezeConfirm")}
+              {freezeNextFrozen ? t("wallets.freezeConfirm") : t("wallets.unfreezeConfirm")}
             </Button>
           </DialogFooter>
         </DialogContent>

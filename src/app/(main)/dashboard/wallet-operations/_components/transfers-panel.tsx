@@ -15,17 +15,16 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Skeleton } from "@/components/ui/skeleton";
 import { useI18n } from "@/i18n/language-provider";
 import { adminWalletOperationApi } from "@/lib/api/services/admin-wallet-operation";
+import type { TransferResponse } from "@/lib/api/types/admin-wallet-operation";
 
+import { DetailFields } from "./detail-fields";
 import { OperationPagination } from "./operation-pagination";
-import { parseOperationPage, parseOperationRecord, pickString } from "./operation-record";
 import { OperationTable } from "./operation-table";
-import { RecordDetails } from "./record-details";
 
 const pageSize = 10;
-const transferIdKeys = ["transfer_id", "id"];
 
 export function TransfersPanel() {
-  const { t, formatNumber, inlineEnd } = useI18n();
+  const { t, formatNumber, formatDateTime, inlineEnd } = useI18n();
   const [page, setPage] = useState(1);
   const [statusDraft, setStatusDraft] = useState("");
   const [status, setStatus] = useState("");
@@ -34,13 +33,8 @@ export function TransfersPanel() {
   //--------list----//
   const listQuery = useQuery({
     queryKey: ["admin-wallet-operations", "transfers", page, pageSize, status],
-    queryFn: async ({ signal }) => {
-      const data = await adminWalletOperationApi.listTransfers(
-        { page, size: pageSize, status: status || null },
-        signal,
-      );
-      return parseOperationPage(data, page, pageSize);
-    },
+    queryFn: ({ signal }) =>
+      adminWalletOperationApi.listTransfers({ page, size: pageSize, status: status || null }, signal),
     placeholderData: keepPreviousData,
   });
   //-------end-list----//
@@ -48,17 +42,13 @@ export function TransfersPanel() {
   //--------detail----//
   const detailQuery = useQuery({
     queryKey: ["admin-wallet-operations", "transfer", selectedId],
-    queryFn: async ({ signal }) => {
-      const data = await adminWalletOperationApi.getTransfer(selectedId ?? "", signal);
-      return parseOperationRecord(data);
-    },
+    queryFn: ({ signal }) => adminWalletOperationApi.getTransfer(selectedId ?? "", signal),
     enabled: Boolean(selectedId),
   });
   //-------end-detail----//
 
   const pageInfo = listQuery.data;
   const total = pageInfo?.total ?? 0;
-  const detailStatus = detailQuery.data ? pickString(detailQuery.data, ["status", "state"]) : null;
 
   return (
     <>
@@ -124,8 +114,18 @@ export function TransfersPanel() {
           {pageInfo ? (
             <>
               <OperationTable
-                page={pageInfo}
-                idKeys={transferIdKeys}
+                rows={pageInfo.items.map((item) => ({
+                  id: item.id,
+                  status: item.status,
+                  amountMinor: item.amount_minor,
+                  currencyCode: item.currency_code,
+                  createdAt: item.created_at,
+                  secondary:
+                    item.sender_name || item.recipient_name
+                      ? `${item.sender_name ?? t("wallet-operations.notAvailable")} → ${item.recipient_name ?? t("wallet-operations.notAvailable")}`
+                      : null,
+                }))}
+                secondaryLabel={t("wallet-operations.parties")}
                 emptyTitle={t("wallet-operations.emptyTransfers")}
                 emptyDescription={t("wallet-operations.emptyTransfersDescription")}
                 emptyIcon={<ArrowLeftRightIcon />}
@@ -152,16 +152,7 @@ export function TransfersPanel() {
           </SheetHeader>
           <div className="flex flex-col gap-4 px-4 pb-4">
             {detailQuery.isPending ? <Skeleton className="h-40 w-full" /> : null}
-            {detailQuery.data ? (
-              <>
-                {detailStatus ? (
-                  <Badge variant="secondary" className="w-fit font-normal">
-                    {detailStatus}
-                  </Badge>
-                ) : null}
-                <RecordDetails record={detailQuery.data} />
-              </>
-            ) : null}
+            {detailQuery.data ? <TransferDetails transfer={detailQuery.data} formatDateTime={formatDateTime} /> : null}
             {!detailQuery.isPending && !detailQuery.data && selectedId ? (
               <AccessError
                 error={detailQuery.error}
@@ -174,5 +165,54 @@ export function TransfersPanel() {
       </Sheet>
       {/* //-------end-detail-sheet----// */}
     </>
+  );
+}
+
+function TransferDetails({
+  transfer,
+  formatDateTime,
+}: {
+  transfer: TransferResponse;
+  formatDateTime: (value: string) => string;
+}) {
+  const { t } = useI18n();
+  const dash = t("wallet-operations.notAvailable");
+
+  const rows = [
+    { label: t("wallet-operations.id"), value: transfer.id, dir: "ltr" as const },
+    { label: t("wallet-operations.status"), value: transfer.status },
+    { label: t("wallet-operations.pendingAction"), value: transfer.pending_action ?? dash },
+    {
+      label: t("wallet-operations.amount"),
+      value: `${transfer.amount_minor} ${transfer.currency_code}`,
+      dir: "ltr" as const,
+    },
+    {
+      label: t("wallet-operations.fee"),
+      value: transfer.fee_minor ? `${transfer.fee_minor} ${transfer.currency_code}` : dash,
+      dir: "ltr" as const,
+    },
+    {
+      label: t("wallet-operations.totalDeduction"),
+      value: transfer.total_deduction_minor ? `${transfer.total_deduction_minor} ${transfer.currency_code}` : dash,
+      dir: "ltr" as const,
+    },
+    { label: t("wallet-operations.sender"), value: transfer.sender_name ?? dash },
+    { label: t("wallet-operations.recipient"), value: transfer.recipient_name ?? dash },
+    { label: t("wallet-operations.created"), value: formatDateTime(transfer.created_at), dir: "ltr" as const },
+    {
+      label: t("wallet-operations.expiresAt"),
+      value: transfer.expires_at ? formatDateTime(transfer.expires_at) : dash,
+      dir: "ltr" as const,
+    },
+  ];
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Badge variant="secondary" className="w-fit font-normal">
+        {transfer.status}
+      </Badge>
+      <DetailFields title={t("wallet-operations.fields")} rows={rows} />
+    </div>
   );
 }

@@ -2,14 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n/language-provider";
-
-import type { OperationPage } from "./operation-record";
+import type { Page } from "@/lib/api/types/users";
 
 export function OperationPagination({
   page,
   onPageChange,
 }: {
-  page: OperationPage;
+  page: Pick<Page<unknown>, "page" | "pages">;
   onPageChange: (page: number) => void;
 }) {
   const { t, formatNumber } = useI18n();

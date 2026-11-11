@@ -1,3 +1,5 @@
+import type { Page } from "@/lib/api/types/users";
+
 /** Contracts for the Admin wallet operation tag: /api/v1/admin/wallet. */
 
 //--------withdrawals----//
@@ -7,17 +9,43 @@ export interface ListAdminWithdrawalsParams {
   status?: string | null;
 }
 
-/**
- * The OpenAPI document does not declare the withdrawals list body.
- * Keep this unknown until the response contract is published.
- */
-export type AdminWithdrawalsResponse = unknown;
+export type BankAccountType = "individual" | "merchant" | "student";
 
-/**
- * The OpenAPI document does not declare the withdrawal detail body.
- * Keep this unknown until the response contract is published.
- */
-export type AdminWithdrawalResponse = unknown;
+export interface BankAccountDetails {
+  bank_name: string;
+  account_holder_name: string;
+  account_number: string;
+  iban_number: string;
+  account_type: BankAccountType;
+  bank_branch?: string | null;
+}
+
+/** Item inside GET /api/v1/admin/wallet/withdrawals */
+export interface AdminWithdrawalResponse {
+  id: string;
+  status: string;
+  pending_action: string | null;
+  currency_code: string;
+  amount_minor: string;
+  fee_minor: string | null;
+  total_deduction_minor: string | null;
+  created_at: string;
+  kind: "withdrawal";
+  bankaccount_id: string;
+  expires_at: string | null;
+  preview_expires_at?: string | null;
+  evidence_path: string;
+  user_id: string;
+  user_name?: string | null;
+  payout_reference?: string | null;
+}
+
+/** GET /api/v1/admin/wallet/withdrawals/{withdrawal_id} */
+export interface AdminWithdrawalDetail extends AdminWithdrawalResponse {
+  bank_details: BankAccountDetails;
+}
+
+export type AdminWithdrawalPage = Page<AdminWithdrawalResponse>;
 
 export type WithdrawalAction = "approve" | "reject" | "start" | "settle" | "fail" | "unknown";
 
@@ -29,11 +57,10 @@ export interface WithdrawalActionDetails {
   note?: string | null;
 }
 
-/**
- * The OpenAPI document does not declare the withdrawal action response body.
- * Keep this unknown until the response contract is published.
- */
-export type WithdrawalActionResponse = unknown;
+/** Response of POST .../actions/{action} */
+export interface WithdrawalActionResponse extends AdminWithdrawalResponse {
+  payout_claimed?: boolean;
+}
 //-------end-withdrawals----//
 
 //--------withdrawal-evidence----//
@@ -62,14 +89,23 @@ export interface ListAdminTransfersParams {
 }
 
 /**
- * The OpenAPI document does not declare the transfers list body.
- * Keep this unknown until the response contract is published.
+ * Item for GET /api/v1/admin/wallet/transfers
+ * and GET /api/v1/admin/wallet/transfers/{transfer_id}
  */
-export type AdminTransfersResponse = unknown;
+export interface TransferResponse {
+  id: string;
+  status: string;
+  pending_action: string | null;
+  currency_code: string;
+  amount_minor: string;
+  fee_minor: string | null;
+  total_deduction_minor: string | null;
+  created_at: string;
+  kind: "transfer";
+  sender_name: string | null;
+  recipient_name: string | null;
+  expires_at?: string | null;
+}
 
-/**
- * The OpenAPI document does not declare the transfer detail body.
- * Keep this unknown until the response contract is published.
- */
-export type AdminTransferResponse = unknown;
+export type AdminTransferPage = Page<TransferResponse>;
 //-------end-transfers----//

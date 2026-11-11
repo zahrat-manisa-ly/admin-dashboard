@@ -18,19 +18,18 @@ import { Spinner } from "@/components/ui/spinner";
 import { useI18n } from "@/i18n/language-provider";
 import { getApiErrorMessage } from "@/lib/api/api-error";
 import { adminWalletOperationApi } from "@/lib/api/services/admin-wallet-operation";
+import type { AdminWithdrawalDetail } from "@/lib/api/types/admin-wallet-operation";
 import { notify } from "@/lib/notify";
 
+import { DetailFields } from "./detail-fields";
 import { OperationPagination } from "./operation-pagination";
-import { parseOperationPage, parseOperationRecord, pickString } from "./operation-record";
 import { OperationTable } from "./operation-table";
-import { RecordDetails } from "./record-details";
 import { WithdrawalActionDialog } from "./withdrawal-action-dialog";
 
 const pageSize = 10;
-const withdrawalIdKeys = ["withdrawal_id", "id"];
 
 export function WithdrawalsPanel() {
-  const { t, formatNumber, inlineEnd } = useI18n();
+  const { t, formatNumber, formatDateTime, inlineEnd } = useI18n();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [statusDraft, setStatusDraft] = useState("");
@@ -41,13 +40,8 @@ export function WithdrawalsPanel() {
   //--------list----//
   const listQuery = useQuery({
     queryKey: ["admin-wallet-operations", "withdrawals", page, pageSize, status],
-    queryFn: async ({ signal }) => {
-      const data = await adminWalletOperationApi.listWithdrawals(
-        { page, size: pageSize, status: status || null },
-        signal,
-      );
-      return parseOperationPage(data, page, pageSize);
-    },
+    queryFn: ({ signal }) =>
+      adminWalletOperationApi.listWithdrawals({ page, size: pageSize, status: status || null }, signal),
     placeholderData: keepPreviousData,
   });
   //-------end-list----//
@@ -55,10 +49,7 @@ export function WithdrawalsPanel() {
   //--------detail----//
   const detailQuery = useQuery({
     queryKey: ["admin-wallet-operations", "withdrawal", selectedId],
-    queryFn: async ({ signal }) => {
-      const data = await adminWalletOperationApi.getWithdrawal(selectedId ?? "", signal);
-      return parseOperationRecord(data);
-    },
+    queryFn: ({ signal }) => adminWalletOperationApi.getWithdrawal(selectedId ?? "", signal),
     enabled: Boolean(selectedId),
   });
   //-------end-detail----//
@@ -81,7 +72,6 @@ export function WithdrawalsPanel() {
 
   const pageInfo = listQuery.data;
   const total = pageInfo?.total ?? 0;
-  const detailStatus = detailQuery.data ? pickString(detailQuery.data, ["status", "state"]) : null;
 
   function invalidateWithdrawals() {
     void queryClient.invalidateQueries({ queryKey: ["admin-wallet-operations", "withdrawals"] });
@@ -154,8 +144,15 @@ export function WithdrawalsPanel() {
           {pageInfo ? (
             <>
               <OperationTable
-                page={pageInfo}
-                idKeys={withdrawalIdKeys}
+                rows={pageInfo.items.map((item) => ({
+                  id: item.id,
+                  status: item.status,
+                  amountMinor: item.amount_minor,
+                  currencyCode: item.currency_code,
+                  createdAt: item.created_at,
+                  secondary: item.user_name,
+                }))}
+                secondaryLabel={t("wallet-operations.customer")}
                 emptyTitle={t("wallet-operations.emptyWithdrawals")}
                 emptyDescription={t("wallet-operations.emptyWithdrawalsDescription")}
                 emptyIcon={<BanknoteIcon />}
@@ -176,38 +173,20 @@ export function WithdrawalsPanel() {
         <SheetContent side={inlineEnd} className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{t("wallet-operations.withdrawalDetails")}</SheetTitle>
-            <SheetDescription className="font-mono" dir="ltr">
-              {selectedId}
-            </SheetDescription>
+            <SheetDescription>{detailQuery.data?.user_name?.trim() || selectedId}</SheetDescription>
           </SheetHeader>
           <div className="flex flex-col gap-4 px-4 pb-4">
             {detailQuery.isPending ? <Skeleton className="h-40 w-full" /> : null}
             {detailQuery.data ? (
-              <>
-                {detailStatus ? (
-                  <Badge variant="secondary" className="w-fit font-normal">
-                    {detailStatus}
-                  </Badge>
-                ) : null}
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" onClick={() => setActionOpen(true)}>
-                    {t("wallet-operations.actions")}
-                  </Button>
-                  {selectedId ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={evidenceQuery.isPending}
-                      onClick={() => evidenceQuery.mutate(selectedId)}
-                    >
-                      {evidenceQuery.isPending ? <Spinner data-icon="inline-start" /> : null}
-                      {t("wallet-operations.viewEvidence")}
-                    </Button>
-                  ) : null}
-                </div>
-                <Separator />
-                <RecordDetails record={detailQuery.data} />
-              </>
+              <WithdrawalDetails
+                withdrawal={detailQuery.data}
+                formatDateTime={formatDateTime}
+                evidencePending={evidenceQuery.isPending}
+                onOpenActions={() => setActionOpen(true)}
+                onViewEvidence={() => {
+                  if (selectedId) evidenceQuery.mutate(selectedId);
+                }}
+              />
             ) : null}
             {!detailQuery.isPending && !detailQuery.data && selectedId ? (
               <AccessError
@@ -230,5 +209,91 @@ export function WithdrawalsPanel() {
         />
       ) : null}
     </>
+  );
+}
+
+function WithdrawalDetails({
+  withdrawal,
+  formatDateTime,
+  evidencePending,
+  onOpenActions,
+  onViewEvidence,
+}: {
+  withdrawal: AdminWithdrawalDetail;
+  formatDateTime: (value: string) => string;
+  evidencePending: boolean;
+  onOpenActions: () => void;
+  onViewEvidence: () => void;
+}) {
+  const { t } = useI18n();
+  const dash = t("wallet-operations.notAvailable");
+
+  const overviewRows = [
+    { label: t("wallet-operations.id"), value: withdrawal.id, dir: "ltr" as const },
+    { label: t("wallet-operations.status"), value: withdrawal.status },
+    {
+      label: t("wallet-operations.pendingAction"),
+      value: withdrawal.pending_action ?? dash,
+    },
+    {
+      label: t("wallet-operations.amount"),
+      value: `${withdrawal.amount_minor} ${withdrawal.currency_code}`,
+      dir: "ltr" as const,
+    },
+    {
+      label: t("wallet-operations.fee"),
+      value: withdrawal.fee_minor ? `${withdrawal.fee_minor} ${withdrawal.currency_code}` : dash,
+      dir: "ltr" as const,
+    },
+    {
+      label: t("wallet-operations.totalDeduction"),
+      value: withdrawal.total_deduction_minor
+        ? `${withdrawal.total_deduction_minor} ${withdrawal.currency_code}`
+        : dash,
+      dir: "ltr" as const,
+    },
+    { label: t("wallet-operations.created"), value: formatDateTime(withdrawal.created_at), dir: "ltr" as const },
+    {
+      label: t("wallet-operations.expiresAt"),
+      value: withdrawal.expires_at ? formatDateTime(withdrawal.expires_at) : dash,
+      dir: "ltr" as const,
+    },
+    {
+      label: t("wallet-operations.payoutReference"),
+      value: withdrawal.payout_reference ?? dash,
+      dir: "ltr" as const,
+    },
+    { label: t("wallet-operations.userId"), value: withdrawal.user_id, dir: "ltr" as const },
+  ];
+
+  const bank = withdrawal.bank_details;
+  const bankRows = [
+    { label: t("wallet-operations.bankName"), value: bank.bank_name },
+    { label: t("wallet-operations.accountHolder"), value: bank.account_holder_name },
+    { label: t("wallet-operations.accountNumber"), value: bank.account_number, dir: "ltr" as const },
+    { label: t("wallet-operations.iban"), value: bank.iban_number, dir: "ltr" as const },
+    { label: t("wallet-operations.accountType"), value: bank.account_type },
+    { label: t("wallet-operations.bankBranch"), value: bank.bank_branch ?? dash },
+  ];
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Badge variant="secondary" className="w-fit font-normal">
+        {withdrawal.status}
+      </Badge>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" onClick={onOpenActions}>
+          {t("wallet-operations.actions")}
+        </Button>
+        <Button variant="outline" size="sm" disabled={evidencePending} onClick={onViewEvidence}>
+          {evidencePending ? <Spinner data-icon="inline-start" /> : null}
+          {t("wallet-operations.viewEvidence")}
+        </Button>
+      </div>
+      <Separator />
+      <DetailFields title={t("wallet-operations.fields")} rows={overviewRows} />
+      <Separator />
+      <DetailFields title={t("wallet-operations.bankDetails")} rows={bankRows} />
+    </div>
   );
 }
